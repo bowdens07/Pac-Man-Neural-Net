@@ -7,7 +7,7 @@ pg.init()
 
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 950
-
+##TODO BUG: Go to bottom left corner. Go up, hold left, soon as turn left press UP. Pac man can get off the grid, check out fudge factor
 
 # more graphics logic
 direction_request = Directions.RIGHT
@@ -21,13 +21,13 @@ pacManImages.append(pg.transform.scale(pg.image.load(f'assets/PacManOpen.png'),(
 
 pacMan_x = 450
 pacMan_y = 663
-pacManVelocity = 0
+pacManVelocity = 2
 
 def getPacManCenterX():
-    return pacMan_x + 23
+    return pacMan_x + 22
 
 def getPacManCenterY():
-    return pacMan_y + 24
+    return pacMan_y + 22
 
 screen = pg.display.set_mode([SCREEN_WIDTH,SCREEN_HEIGHT])
 timer = pg.time.Clock()
@@ -45,7 +45,7 @@ def isInMiddleOfTileX():
     return False
 
 def isInMiddleOfTileY():
-    tile_height = SCREEN_HEIGHT // 30 #30 horizontal tiles
+    tile_height = (SCREEN_HEIGHT - 50) // 32 #32 vertical tiles
     if 12 <= getPacManCenterY() % tile_height <= 18:
         return True
     return False
@@ -56,63 +56,49 @@ def getValidTurns(xPos):
     tile_height = (SCREEN_HEIGHT - 50) // 32 #32 vertical tiles, leave 50 px for UI elements at bottom (may remove)
     tile_width = SCREEN_WIDTH // 30 #30 horizontal tiles
     fudgeFactor = 15
-    validTurnstring = ""
     # check collision based on xPos and yPos of player +/- fudgeFactor 
     if xPos //30 < 29:
         #Can I reverse Direction?
         if direction == Directions.RIGHT: # <3 because board values 0,1,2 can be moved into, rest are walls
             if board[getPacManCenterY() // tile_height][(getPacManCenterX() - fudgeFactor) // tile_width]  < 3:
                 turns[1] = True
-                validTurnstring += "can turn left"
         if direction == Directions.LEFT:
             if board[getPacManCenterY() // tile_height][(getPacManCenterX() + fudgeFactor) // tile_width]  < 3:
                 turns[0] = True
-                validTurnstring += "can turn right"
         if direction == Directions.UP:
             if board[(getPacManCenterY() + fudgeFactor) // tile_height][getPacManCenterX() // tile_width]  < 3:
                 turns[3] = True
-                validTurnstring += "can turn up"
         if direction == Directions.DOWN:
             if board[(getPacManCenterY() - fudgeFactor) // tile_height][getPacManCenterX() // tile_width]  < 3:
                 turns[2] = True
-                validTurnstring += "can turn down1"
 
         #Can I turn up or down?
         if direction == Directions.UP or direction == Directions.DOWN:
             if(isInMiddleOfTileX()): #IF pac man is approximately horiztonatally in middle of tile
                 if board[(getPacManCenterY() + fudgeFactor) // tile_height][getPacManCenterX() // tile_width] < 3:
                     turns[3] = True
-                validTurnstring += "can turn down2"
                 if board[(getPacManCenterY() - fudgeFactor) // tile_height][getPacManCenterX() // tile_width] < 3:
                     turns[2] = True
-                validTurnstring += "can turn up"
             if(isInMiddleOfTileY()): #IF pac man is approximately horiztonatally in middle of tile
                 if board[getPacManCenterY() // tile_height][(getPacManCenterX() - tile_width) // tile_width] < 3:
                     turns[1] = True
-                    validTurnstring += "can turn left"
-                if board[getPacManCenterY() // tile_height][getPacManCenterX() + tile_width // tile_width] < 3:
+                if board[getPacManCenterY() // tile_height][(getPacManCenterX() + tile_width) // tile_width] < 3:
                     turns[0] = True
-                    validTurnstring += "can turn right"
         #Can I turn left or right?
         if direction == Directions.RIGHT or direction == Directions.LEFT:
             if(isInMiddleOfTileX()): #IF pac man is approximately horiztonatally in middle of tile
                 if board[(getPacManCenterY() + fudgeFactor) // tile_height][getPacManCenterX() // tile_width] < 3:
                     turns[3] = True
-                validTurnstring += "can turn down3"
                 if board[(getPacManCenterY() - fudgeFactor) // tile_height][getPacManCenterX() // tile_width] < 3:
                     turns[2] = True
-                validTurnstring += "can turn up"
-            if(isInMiddleOfTileY()): #IF pac man is approximately horiztonatally in middle of tile
+            if(isInMiddleOfTileY()): #IF pac man is approximately vertically in middle of tile
                 if board[getPacManCenterY() // tile_height][(getPacManCenterX() - fudgeFactor) // tile_width] < 3:
                     turns[1] = True
-                    validTurnstring += "can turn left"
-                if board[getPacManCenterY() // tile_height][getPacManCenterX() + fudgeFactor // tile_width] < 3:
+                if board[getPacManCenterY() // tile_height][(getPacManCenterX() + fudgeFactor) // tile_width] < 3:
                     turns[0] = True
-                    validTurnstring += "can turn right"
     else: #This is for wrapping around the board horizontally. If you want to wrap vertically, this code must change
         turns[0] = True
         turns[1] = True
-    print(validTurnstring)
     return turns
     
 def movePacMan(pacManX, pacManY):
@@ -154,8 +140,8 @@ while runGame:
 
     screen.fill('black')
     
-    #availableTurns = getValidTurns(getPacManCenterX())
-    #pacMan_x, pacMan_y = movePacMan(pacMan_x, pacMan_y)
+    availableTurns = getValidTurns(getPacManCenterX())
+    pacMan_x, pacMan_y = movePacMan(pacMan_x, pacMan_y)
     draw_board(screen, board, boardColor, SCREEN_HEIGHT, SCREEN_WIDTH, flicker)
     drawPacMan()
 
@@ -174,26 +160,34 @@ while runGame:
                 direction_request = Directions.DOWN
         if event.type == pg.KEYUP:
             if event.key == pg.K_RIGHT and direction_request == Directions.RIGHT:
-                direction_request = Directions.RIGHT
+                direction_request = direction
                 print("requesting Right")
             if event.key == pg.K_LEFT  and direction_request == Directions.LEFT:
-                direction_request = Directions.LEFT
+                direction_request = direction
                 print("requesting Left")
             if event.key == pg.K_UP  and direction_request == Directions.UP:
-                direction_request = Directions.UP
+                direction_request = direction
                 print("requesting Up")
             if event.key == pg.K_DOWN  and direction_request == Directions.DOWN: 
-                direction_request = Directions.DOWN      
+                direction_request = direction  
                 print("requesting Down")
         #set the new direction if you can
-        for direction in Directions:
-            if direction_request == direction and availableTurns[direction]:
-                direction = direction_request
-                print("Set Direction " + direction.name)
+    if direction_request == Directions.RIGHT and availableTurns[Directions.RIGHT]:
+        direction = direction_request
+        print("Turning Right")
+    if direction_request == Directions.LEFT and availableTurns[Directions.LEFT]:
+        direction = direction_request
+        print("Turning Left")
+    if direction_request == Directions.DOWN and availableTurns[Directions.DOWN]:
+        direction = direction_request
+        print("Turning Down")
+    if direction_request == Directions.UP and availableTurns[Directions.UP]:
+        direction = direction_request
+        print("Turning Up")
 
-        if pacMan_x > 900: #wrap pac man if he moves off screen, magic numbers are for visuals
-            pacMan_x = -47
-        elif pacMan_x < -50:
-            pacMan_x = 897
+    if pacMan_x > 900: #wrap pac man if he moves off screen, magic numbers are for visuals
+        pacMan_x = -47
+    elif pacMan_x < -50:
+        pacMan_x = 897
     pg.display.flip() ##draws the screen, I think
 pg.quit() # End the game
