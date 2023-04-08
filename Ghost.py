@@ -1,5 +1,12 @@
+#this class relies on a lot of globals. Consider some services to maybe clean stuff up
+from GameStateService import GameStateService
+import pygame as pg
+
 class Ghost:
-    def __init__(self, xPos, yPos, target, speed, image, dir, isDead, ghostId):
+    def __init__(self, gameStateService: GameStateService, screen: pg.Surface, board:list[list[int]], xPos, yPos, target, speed, image, dir, isDead, isEaten, ghostId, vulnGhostImage, deadGhostImage):
+        self.gameStateService = gameStateService
+        self.screen = screen
+        self.board = board
         self.xPos = xPos
         self.yPos = yPos
         self.centerX = xPos +22
@@ -9,84 +16,92 @@ class Ghost:
         self.image = image
         self.direction = dir
         self.isDead = isDead
+        self.isEaten = isEaten
         self.ghostId = ghostId
         self.turns, self.isInBox = self.checkCollision()
+        self.vulnerableGhostImage = vulnGhostImage
+        self.deadGhostImage = deadGhostImage
         self.hitBox = self.draw()
 
+        
+
+    def setNewBoard(self, board:list[list[int]]): #necessary evil, board must be reset on game reset
+        self.board = board
+
     def draw(self):
-        if (not powerPellet and not self.isDead) or (ghostsEaten[self.ghostId] and powerPellet and not self.isDead): #really gross
-            screen.blit(self.image, (self.xPos, self.yPos))
-        elif powerPellet and not self.isDead and not ghostsEaten[self.ghostId]:
-            screen.blit(vulnerableGhostImage, (self.xPos, self.yPos))
+        if (not self.gameStateService.powerPellet and not self.isDead) or (self.isEaten and self.gameStateService.powerPellet and not self.isDead): #really gross
+            self.screen.blit(self.image, (self.xPos, self.yPos))
+        elif self.gameStateService.powerPellet and not self.isDead and not self.isEaten:
+            self.screen.blit(self.vulnerableGhostImage, (self.xPos, self.yPos))
         else:
-            screen.blit(deadGhostImage, (self.xPos, self.yPos))
+            self.screen.blit(self.deadGhostImage, (self.xPos, self.yPos))
         self.hitBox = pg.rect.Rect((self.centerX - 18, self.centerY - 18), (36,36)) ## fudge this for more fair hitboxes 
         return self.hitBox
 
     def checkCollision(self): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up
         
         self.isInBox = False
-        tileHeight = (SCREEN_HEIGHT - 50) // 32
-        tileWidth = SCREEN_WIDTH // 30
+        tileHeight = (self.screen.get_height() - 50) // 32
+        tileWidth = self.screen.get_width() // 30
         fudgeFactor = 15
         self.turns = [False,False,False,False]
         if 0 < self.centerX // 30 < 29:
-            if board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9: # checking for 9 to allow ghosts to move through gates
+            if self.board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9: # checking for 9 to allow ghosts to move through gates
                 self.turns[2] = True
-            if board[self.centerY // tileHeight][(self.centerX - fudgeFactor) // tileWidth] < 3 \
-                    or (board[self.centerY // tileHeight][(self.centerX - fudgeFactor) // tileWidth] == 9 and (
+            if self.board[self.centerY // tileHeight][(self.centerX - fudgeFactor) // tileWidth] < 3 \
+                    or (self.board[self.centerY // tileHeight][(self.centerX - fudgeFactor) // tileWidth] == 9 and (
                     self.isInBox or self.isDead)):
                 self.turns[1] = True
-            if board[self.centerY // tileHeight][(self.centerX + fudgeFactor) // tileWidth] < 3 \
-                    or (board[self.centerY // tileHeight][(self.centerX + fudgeFactor) // tileWidth] == 9 and (
+            if self.board[self.centerY // tileHeight][(self.centerX + fudgeFactor) // tileWidth] < 3 \
+                    or (self.board[self.centerY // tileHeight][(self.centerX + fudgeFactor) // tileWidth] == 9 and (
                     self.isInBox or self.isDead)):
                 self.turns[0] = True
-            if board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
-                    or (board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
+            if self.board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
+                    or (self.board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
                     self.isInBox or self.isDead)):
                 self.turns[3] = True
-            if board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
-                    or (board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
+            if self.board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
+                    or (self.board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
                     self.isInBox or self.isDead)):
                 self.turns[2] = True
 
             if self.direction == 2 or self.direction == 3:
                 if 12 <= self.centerX % tileWidth <= 18:
-                    if board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
-                            or (board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
+                    if self.board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
+                            or (self.board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
                             self.isInBox or self.isDead)):
                         self.turns[3] = True
-                    if board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
-                            or (board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
+                    if self.board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
+                            or (self.board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
                             self.isInBox or self.isDead)):
                         self.turns[2] = True
                 if 12 <= self.centerY % tileHeight <= 18:
-                    if board[self.centerY // tileHeight][(self.centerX - tileWidth) // tileWidth] < 3 \
-                            or (board[self.centerY // tileHeight][(self.centerX - tileWidth) // tileWidth] == 9 and (
+                    if self.board[self.centerY // tileHeight][(self.centerX - tileWidth) // tileWidth] < 3 \
+                            or (self.board[self.centerY // tileHeight][(self.centerX - tileWidth) // tileWidth] == 9 and (
                             self.isInBox or self.isDead)):
                         self.turns[1] = True
-                    if board[self.centerY // tileHeight][(self.centerX + tileWidth) // tileWidth] < 3 \
-                            or (board[self.centerY // tileHeight][(self.centerX + tileWidth) // tileWidth] == 9 and (
+                    if self.board[self.centerY // tileHeight][(self.centerX + tileWidth) // tileWidth] < 3 \
+                            or (self.board[self.centerY // tileHeight][(self.centerX + tileWidth) // tileWidth] == 9 and (
                             self.isInBox or self.isDead)):
                         self.turns[0] = True
 
             if self.direction == 0 or self.direction == 1:
                 if 12 <= self.centerX % tileWidth <= 18:
-                    if board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
-                            or (board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
+                    if self.board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
+                            or (self.board[(self.centerY + fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
                             self.isInBox or self.isDead)):
                         self.turns[3] = True
-                    if board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
-                            or (board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
+                    if self.board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] < 3 \
+                            or (self.board[(self.centerY - fudgeFactor) // tileHeight][self.centerX // tileWidth] == 9 and (
                             self.isInBox or self.isDead)):
                         self.turns[2] = True
                 if 12 <= self.centerY % tileHeight <= 18:
-                    if board[self.centerY // tileHeight][(self.centerX - fudgeFactor) // tileWidth] < 3 \
-                            or (board[self.centerY // tileHeight][(self.centerX - fudgeFactor) // tileWidth] == 9 and (
+                    if self.board[self.centerY // tileHeight][(self.centerX - fudgeFactor) // tileWidth] < 3 \
+                            or (self.board[self.centerY // tileHeight][(self.centerX - fudgeFactor) // tileWidth] == 9 and (
                             self.isInBox or self.isDead)):
                         self.turns[1] = True
-                    if board[self.centerY // tileHeight][(self.centerX + fudgeFactor) // tileWidth] < 3 \
-                            or (board[self.centerY // tileHeight][(self.centerX + fudgeFactor) // tileWidth] == 9 and (
+                    if self.board[self.centerY // tileHeight][(self.centerX + fudgeFactor) // tileWidth] < 3 \
+                            or (self.board[self.centerY // tileHeight][(self.centerX + fudgeFactor) // tileWidth] == 9 and (
                             self.isInBox or self.isDead)):
                         self.turns[0] = True
         else:
@@ -233,4 +248,4 @@ class Ghost:
             self.xPos = 900
         elif self.xPos > 900:
             self.xPos - 30
-        return self.xPos, self.yPos, self.direction      
+        return self.xPos, self.yPos, self.direction    
