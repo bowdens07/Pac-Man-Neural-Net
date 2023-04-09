@@ -330,17 +330,24 @@ while runGame:
         inky_x, inky_y, inkyDirection = inky.moveSue()
         pinky_x, pinky_y, pinkyDirection = pinky.moveSue()
         sue_x, sue_y, sueDirection = sue.moveSue()
+        #print(f'BlinkyPos ${blinky_x},{blinky_y}') seems to be valid
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts = checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
     pacManHitBox = pg.draw.circle(screen, 'black', (getPacManCenterX(), getPacManCenterY()), 20, 2)
     drawPacMan(gameStateService)
     #TODO: redeclaring the ghosts every frame is unaceptable. Change that 
-    blinky = Ghost(gameStateService, screen, board, blinky_x,blinky_y, ghostTargets[0], ghostSpeeds[0], blinkyImage, blinkyDirection, blinkyDead, ghosts[0].isEaten, 0, vulnerableGhostImage, deadGhostImage)
-    inky = Ghost(gameStateService, screen, board, inky_x,inky_y, ghostTargets[1], ghostSpeeds[1], inkyImage, inkyDirection, inkyDead, ghosts[1].isEaten, 1, vulnerableGhostImage, deadGhostImage)
-    pinky = Ghost(gameStateService, screen, board, pinky_x,pinky_y, ghostTargets[2], ghostSpeeds[2], pinkyImage, pinkyDirection, pinkyDead, ghosts[2].isEaten, 2, vulnerableGhostImage, deadGhostImage)
-    sue = Ghost(gameStateService, screen, board, sue_x,sue_y, ghostTargets[3], ghostSpeeds[3], sueImage, sueDirection, sueDead, ghosts[3].isEaten, 3, vulnerableGhostImage, deadGhostImage)
-    ghosts = [blinky,inky,pinky,sue]
+    #blinky = Ghost(gameStateService, screen, board, blinky_x,blinky_y, ghostTargets[0], ghostSpeeds[0], blinkyImage, blinkyDirection, blinkyDead, ghosts[0].isEaten, 0, vulnerableGhostImage, deadGhostImage)
+    #inky = Ghost(gameStateService, screen, board, inky_x,inky_y, ghostTargets[1], ghostSpeeds[1], inkyImage, inkyDirection, inkyDead, ghosts[1].isEaten, 1, vulnerableGhostImage, deadGhostImage)
+    #pinky = Ghost(gameStateService, screen, board, pinky_x,pinky_y, ghostTargets[2], ghostSpeeds[2], pinkyImage, pinkyDirection, pinkyDead, ghosts[2].isEaten, 2, vulnerableGhostImage, deadGhostImage)
+    #sue = Ghost(gameStateService, screen, board, sue_x,sue_y, ghostTargets[3], ghostSpeeds[3], sueImage, sueDirection, sueDead, ghosts[3].isEaten, 3, vulnerableGhostImage, deadGhostImage)
+    #ghosts = [blinky,inky,pinky,sue]
+
+    print(f'Blinky Turns L: {blinky.turns[0]} R: {blinky.turns[1]} U: {blinky.turns[2]} D: {blinky.turns[3]} C-XY: {blinky.getCenterX()},{blinky.getCenterY()}')
+    for g in ghosts:
+    #    g.turns, g.isInBox = g.checkCollision()
+        g.draw()
+        g.checkCollision() #for some reason collision is always true when not reusinc ctors
 
     drawHud(gameStateService)
     ghostTargets = getTargets(blinky_x,blinky_y,inky_x, inky_y, pinky_x,pinky_y, sue_x, sue_y)
