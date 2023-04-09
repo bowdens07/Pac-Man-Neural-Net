@@ -1,10 +1,15 @@
 import pygame as pg
 import copy
+from Ghosts.Ghost import Ghost
 from direction import Directions
 from board import default_board
 from graphics import draw_board
 from GameStateService import GameStateService
-from Ghost import Ghost
+from Ghosts.Blinky import Blinky
+from Ghosts.Inky import Inky
+from Ghosts.Pinky import Pinky
+from Ghosts.Sue import Sue
+
 
 pg.init()
 
@@ -24,10 +29,6 @@ pacManImages.append(pg.transform.scale(pg.image.load(f'assets/PacManClose.png'),
 pacManImages.append(pg.transform.scale(pg.image.load(f'assets/PacManMid.png'),(45,45)))
 pacManImages.append(pg.transform.scale(pg.image.load(f'assets/PacManOpen.png'),(45,45)))
 
-blinkyImage = pg.transform.scale(pg.image.load(f'assets/Blinky.png'),(45,45))
-inkyImage = pg.transform.scale(pg.image.load(f'assets/Inky.png'),(45,45))
-pinkyImage = pg.transform.scale(pg.image.load(f'assets/Pinky.png'),(45,45))
-sueImage = pg.transform.scale(pg.image.load(f'assets/Sue.png'),(45,45))
 #end graphics logic
 
 pacMan_x = 450
@@ -39,35 +40,14 @@ pacManVelocity = 2
 
 gameStateService = GameStateService()
  
-ghostsEaten = [False,False,False,False]
-ghostTargets = [(pacMan_x, pacMan_y),(pacMan_x, pacMan_y),(pacMan_x, pacMan_y),(pacMan_x, pacMan_y)]
-ghostSpeeds = [2,2,2,2]
-
-blinky_x = 56
-blinky_y = 58
-blinkyDirection = Directions.RIGHT
-blinkyDead = False
-blinkyBox = False
-screen.get_width()
-inky_x = 440 
-inky_y = 388
-inkyDirection = Directions.UP
-inkyDead = False
-inkyBox = False
-
-pinky_x = 440
-pinky_y = 438
-pinkyDirection = Directions.UP
-pinkyDead = False
-pinkyBox = False
-
-sue_x = 440
-sue_y = 438
-sueDirection = Directions.UP
-sueDead = False
-sueBox = False
-
 gameWon = False
+
+blinky = Blinky(gameStateService, screen, board, 56,58)
+inky = Inky(gameStateService, screen, board, 440,388)
+pinky = Pinky(gameStateService, screen, board, 440,438)
+sue = Sue(gameStateService, screen, board, 440,438)
+ghosts: list[Ghost] = [blinky,inky,pinky,sue]
+
 
 def getPacManCenterX():
     return pacMan_x + 22
@@ -154,69 +134,6 @@ def movePacMan(pacManX, pacManY):
         pacManY += pacManVelocity
     return pacManX, pacManY
 
-def getTargets(blinky_x,blinky_y,inky_x, inky_y, pinky_x,pinky_y, sue_x, sue_y):
-    if pacMan_x < 450: #basicall move to the opposite side of the board pac-man is on if powerup
-        runawayX = 900
-    else:
-        runawayX = 0
-    if pacMan_y < 450:
-        runawayY = 900
-    else:
-        runawayY = 0
-    returnTarget = (380, 400) #inside the box
-#Bugged right now : Todo, once eyes get into box, set them to leave box, then purusue pac man again
-    if gameStateService.powerPellet:
-        if not blinky.isDead:
-            blinkyTarget = (runawayX, runawayY)
-        else: 
-            blinkyTarget = returnTarget
-        if not inky.isDead:
-            inkyTarget = (runawayX, pacMan_y)
-        else: 
-            inkyTarget = returnTarget
-        if not pinky.isDead:
-            pinkyTarget = (pacMan_x, runawayY)
-        else: 
-            pinkyTarget = returnTarget
-        if not sue.isDead:
-            sueTarget = (450, 450)
-        else: 
-            sueTarget = returnTarget
-    else: 
-        if not blinky.isDead:
-            if isInTheBox(blinky_x, blinky_y):
-                blinkyTarget = (400,100)
-            else:
-                blinkyTarget = (pacMan_x, pacMan_y)
-        else: 
-            blinkyTarget = returnTarget
-        if not inky.isDead:
-            if isInTheBox(inky_x, inky_y):
-                inkyTarget = (400,100)
-            else:
-                inkyTarget = (pacMan_x, pacMan_y)                
-        else: 
-            inkyTarget = returnTarget
-        if not pinky.isDead:
-            if isInTheBox(pinky_x,pinky_y):
-                pinkyTarget = (400,100)
-            else:
-                pinkyTarget = (pacMan_x, pacMan_y)
-        else: 
-            pinkyTarget = returnTarget
-        if not sue.isDead:
-            if isInTheBox(sue_x,sue_y):
-                sueTarget = (400,100)
-            else:
-                sueTarget = (pacMan_x, pacMan_y)
-        else: 
-            sueTarget = returnTarget     
-
-    return [blinkyTarget, inkyTarget, pinkyTarget, sueTarget]
-
-def isInTheBox(xPosition, yPosition) -> bool:
-    return 340 < xPosition < 560 and 330 < yPosition < 500
-
 #ghosts doesn't have to be returned as a shallow copy will do, but I will for now
 def checkCollisions(curScore, power, powerCount, ghosts: list[Ghost]):
     tile_height = (screen.get_height() - 50) // 32 #32 vertical tiles
@@ -236,7 +153,8 @@ def checkCollisions(curScore, power, powerCount, ghosts: list[Ghost]):
             #eatenGhosts = [False,False,False,False]
     return curScore, power, powerCount, ghosts 
 
-def drawHud(gameStateService: GameStateService):
+
+def drawHud(gameStateService: GameStateService): ##TODO bugged
     scoreText = font.render(f'Score: {gameStateService.score}', True, 'white')
     screen.blit(scoreText,(10,920))
     for i in range(lives):
@@ -264,15 +182,36 @@ def drawPacMan(gameStateService: GameStateService):
     elif pacManDirection == Directions.DOWN: 
         screen.blit(pg.transform.rotate(pacManImages[gameStateService.counter // 9],-90), (pacMan_x,pacMan_y))        
 
-#TODO: get rid of this class mismanagement
-vulnerableGhostImage = pg.transform.scale(pg.image.load(f'assets/VulnerableGhost.png'),(45,45))
-deadGhostImage = pg.transform.scale(pg.image.load(f'assets/DeadEyesRight.png'),(45,45))
+def resetPositions():
+    gameStateService.powerPellet = False
+    gameStateService.powerCounter = False
+    pacMan_x = 450 ##todo once you make a pac man class, this will work
+    pacMan_y = 663
+    pacManDirection = Directions.RIGHT
+    
+    blinky.xPos = 56
+    blinky.yPos = 58
+    blinky.direction = Directions.RIGHT
+    blinky.isDead = False
+    blinky.isEaten = False
 
-blinky = Ghost(gameStateService, screen, board, blinky_x,blinky_y, ghostTargets[0], ghostSpeeds[0], blinkyImage, blinkyDirection, blinkyDead, False, 0, vulnerableGhostImage, deadGhostImage)
-inky = Ghost(gameStateService, screen, board, inky_x,inky_y, ghostTargets[1], ghostSpeeds[1], inkyImage, inkyDirection, inkyDead, False, 1, vulnerableGhostImage, deadGhostImage)
-pinky = Ghost(gameStateService, screen, board, pinky_x,pinky_y, ghostTargets[2], ghostSpeeds[2], pinkyImage, pinkyDirection, pinkyDead, False, 2, vulnerableGhostImage, deadGhostImage)
-sue = Ghost(gameStateService, screen, board, sue_x,sue_y, ghostTargets[3], ghostSpeeds[3], sueImage, sueDirection, sueDead, False, 3, vulnerableGhostImage, deadGhostImage)
-ghosts = [blinky,inky,pinky,sue]
+    inky.xPos = 440
+    inky.yPos = 388
+    inky.direction = Directions.UP
+    inky.isDead = False
+    inky.isEaten = False
+
+    pinky.xPos = 440
+    pinky.yPos = 438
+    pinky.direction = Directions.UP
+    pinky.isDead = False
+    pinky.isEaten = False
+
+    sue.xPos = 440
+    sue.yPos = 438
+    sue.direction = Directions.UP
+    sue.isDead = False
+    sue.isEaten = False
 
 #Main game loop
 while runGame:
@@ -295,8 +234,7 @@ while runGame:
         gameStateService.powerPellet = False
         print("PowerPellet Expired")
         for g in ghosts:
-            g.isEaten = False #TODO why intellisense white?
-        #ghostsEaten = [False, False, False, False] 
+            g.isEaten = False 
 
     if gameStateService.startupCounter < 240 and not gameStateService.gameOver and not gameStateService.gameWon:
         gameStateService.gameStart = False
@@ -306,22 +244,8 @@ while runGame:
     screen.fill('black')
     
 #set ghosts speeds - tightly coupled
-    if not gameStateService.powerPellet:
-        ghostSpeeds = [1,1,1,1]
-    else:
-        ghostSpeeds = [1,1,1,1]
-        for g in ghosts: #TODO: This really sucks bad 
-            if g.isEaten:
-                ghostSpeeds[g.ghostId] = 2
-        if blinkyDead:
-            ghostSpeeds[0] =  4       
-        if inkyDead:
-            ghostSpeeds[1] =  4    
-        if pinkyDead:
-            ghostSpeeds[2] =  4    
-        if sueDead:
-            ghostSpeeds[3] =  4    
-
+    for g in ghosts:
+        g.updateSpeed()
 
     availableTurns = getValidTurns(getPacManCenterX())
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
@@ -336,21 +260,17 @@ while runGame:
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
     pacManHitBox = pg.draw.circle(screen, 'black', (getPacManCenterX(), getPacManCenterY()), 20, 2)
     drawPacMan(gameStateService)
-    #TODO: redeclaring the ghosts every frame is unaceptable. Change that 
-    #blinky = Ghost(gameStateService, screen, board, blinky_x,blinky_y, ghostTargets[0], ghostSpeeds[0], blinkyImage, blinkyDirection, blinkyDead, ghosts[0].isEaten, 0, vulnerableGhostImage, deadGhostImage)
-    #inky = Ghost(gameStateService, screen, board, inky_x,inky_y, ghostTargets[1], ghostSpeeds[1], inkyImage, inkyDirection, inkyDead, ghosts[1].isEaten, 1, vulnerableGhostImage, deadGhostImage)
-    #pinky = Ghost(gameStateService, screen, board, pinky_x,pinky_y, ghostTargets[2], ghostSpeeds[2], pinkyImage, pinkyDirection, pinkyDead, ghosts[2].isEaten, 2, vulnerableGhostImage, deadGhostImage)
-    #sue = Ghost(gameStateService, screen, board, sue_x,sue_y, ghostTargets[3], ghostSpeeds[3], sueImage, sueDirection, sueDead, ghosts[3].isEaten, 3, vulnerableGhostImage, deadGhostImage)
-    #ghosts = [blinky,inky,pinky,sue]
 
-    print(f'Blinky Turns L: {blinky.turns[0]} R: {blinky.turns[1]} U: {blinky.turns[2]} D: {blinky.turns[3]} C-XY: {blinky.getCenterX()},{blinky.getCenterY()}')
+    #print(f'Inky Turns L: {inky.turns[0]} R: {inky.turns[1]} U: {inky.turns[2]} D: {inky.turns[3]} C-XY: {inky.getCenterX()},{inky.getCenterY()}')
+
+
     for g in ghosts:
     #    g.turns, g.isInBox = g.checkCollision()
         g.draw()
         g.checkCollision() #for some reason collision is always true when not reusinc ctors
-
+        g.setNewTarget(pacMan_x,pacMan_y)
+        
     drawHud(gameStateService)
-    ghostTargets = getTargets(blinky_x,blinky_y,inky_x, inky_y, pinky_x,pinky_y, sue_x, sue_y)
 
     #check for game win
     gameStateService.gameWon = True
@@ -365,53 +285,16 @@ while runGame:
                     print("Pac-Man Died, resetting game")
                     lives -= 1
                     gameStateService.startupCounter = 0 
-                    #move everyone back to init positions - make this a function - more like reset game function 
-                    gameStateService.powerPellet = False
-                    gameStateService.powerCounter = False
-                    pacMan_x = 450
+                    pacMan_x = 450 ##todo remove after making pac man class
                     pacMan_y = 663
-                    pacManDirection = Directions.RIGHT
-
-                    blinky_x = 56
-                    blinky_y = 58
-                    blinkyDirection = Directions.RIGHT
-                    blinkyDead = False
-
-                    inky_x = 440 
-                    inky_y = 388
-                    inkyDirection = Directions.UP
-                    inkyDead = False
-
-                    pinky_x = 440
-                    pinky_y = 438
-                    pinkyDirection = Directions.UP
-                    pinkyDead = False
-
-                    sue_x = 440
-                    sue_y = 438
-                    sueDirection = Directions.UP
-                    sueDead = False
-                    for g in ghosts: 
-                        g.isEaten = False
-                    #ghostsEaten = [False, False, False, False]
+                    resetPositions()
                     break
                 else:
                     gameStateService.gameOver = True
                     gameStateService.gameStart = False
                     gameStateService.startupCounter = 0
-        #ghostsEaten[g.ghostId]
         elif (gameStateService.powerPellet and not g.isDead and not g.isEaten and pacManHitBox.colliderect(g.hitBox)):
-            if g.ghostId == 0: #eliminate this coupling by pulling ghost into it's own class that doesn't need to be made every frame
-                blinkyDead = True
-            if g.ghostId == 1:
-                inkyDead = True
-            if g.ghostId == 2:
-                pinkyDead = True
-            if g.ghostId == 3:
-                sueDead = True
             g.isDead = True
-
-            #ghostsEaten[g.ghostId] = True
             g.isEaten = True
             numGhosts = len([g for g in ghosts if g.isEaten])
             gameStateService.score += (2 ** numGhosts) * 100
@@ -436,35 +319,10 @@ while runGame:
             if event.key == pg.K_SPACE and (gameStateService.gameOver or gameStateService.gameWon):
                     gameStateService.startupCounter = 0  #repasted elsewhere. Make it a function!
                     #move everyone back to init positions - make this a function - more like reset game function 
-                    gameStateService.powerPellet = False
-                    gameStateService.powerCounter = False
-                    pacMan_x = 450
+                    pacMan_x = 450 ##todo remove after making pac man class
                     pacMan_y = 663
-                    pacManDirection = Directions.RIGHT
-                    direction_request = Directions.RIGHT
+                    resetPositions()
 
-                    blinky_x = 56
-                    blinky_y = 58
-                    blinkyDirection = Directions.RIGHT
-                    blinkyDead = False
-
-                    inky_x = 440 
-                    inky_y = 388
-                    inkyDirection = Directions.UP
-                    inkyDead = False
-
-                    pinky_x = 440
-                    pinky_y = 438
-                    pinkyDirection = Directions.UP
-                    pinkyDead = False
-
-                    sue_x = 440
-                    sue_y = 438
-                    sueDirection = Directions.UP
-                    sueDead = False
-                    for g in ghosts: 
-                        g.isEaten = False
-                    #ghostsEaten = [False, False, False, False]   
                     #this logic below is unique to restart
                     board = copy.deepcopy(default_board)
                     for g in ghosts: #make sure the ghost's board match the new board
@@ -505,14 +363,8 @@ while runGame:
     elif pacMan_x < -50:
         pacMan_x = 897
 
-    #reset the ghosts if they make it to the box
-    if blinky.isInBox and blinky.isDead:
-        blinkyDead = False
-    if inky.isInBox and inky.isDead:
-        inkyDead = False        
-    if pinky.isInBox and pinky.isDead:
-        pinkyDead = False
-    if sue.isInBox and sue.isDead:
-        sueDead = False
-    pg.display.flip() ##draws the screen, I think
+    for g in ghosts:
+        if gameStateService.isInReviveZone(g.getCenterX(),g.getCenterY()):
+            g.isDead = False
+    pg.display.flip() ##draws the screen
 pg.quit() # End the game

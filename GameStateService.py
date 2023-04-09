@@ -8,3 +8,10 @@ class GameStateService:
         self.gameStart = False
         self.gameOver = False
         self.gameWon = False
+
+    def isInTheBox(self, xPosition:int, yPosition:int) -> bool:
+        return 345 < xPosition < 565 and 380 < yPosition < 490
+    
+    def isInReviveZone(self, xPosition:int, yPosition:int) -> bool:
+        return 350 < xPosition < 550 and 450 < yPosition < 480
+    

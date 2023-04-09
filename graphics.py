@@ -12,6 +12,10 @@ def draw_board(screen,board, boardColor, screen_height, screen_width, flicker):
     tile_width = screen_width // 30 #30 horizontal tiles
     half_tile_width = tile_width * 0.5 
 
+    #pg.draw.rect(screen, (255,0,0), pg.Rect(345,380,210,110)) box
+    #pg.draw.rect(screen, (0,0,255), pg.Rect(400,100,50,50)) leave box target
+    pg.draw.rect(screen, (0,0,255), pg.Rect(350,450,200,30)) #revive zone
+
     # not thrilled with this render method. It's a lot of math. Maybe consider some static calculations for each relevant position? Let's clock performance later to see if we train fast enough
     #I want to use sprites, this is going to kill performance if we draw all these shapes every frame.
     for row in range(len(board)):
