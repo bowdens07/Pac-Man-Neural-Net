@@ -4,12 +4,13 @@ from Ghosts.Ghost import Ghost
 from PacMan import PacMan
 from direction import Directions
 from board import default_board
-from graphics import draw_board, drawHud, drawTileOutlines
+from graphics import draw_board, drawHud, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
 from GameStateService import GameStateService
 from Ghosts.Blinky import Blinky
 from Ghosts.Inky import Inky
 from Ghosts.Pinky import Pinky
 from Ghosts.Sue import Sue
+from utilities.PathingNode import PathingNodes
 
 
 pg.init()
@@ -36,7 +37,7 @@ blinky = Blinky(gameStateService, screen, board, 56,58)
 inky = Inky(gameStateService, screen, board, 440,388)
 pinky = Pinky(gameStateService, screen, board, 440,438)
 sue = Sue(gameStateService, screen, board, 440,438)
-ghosts: list[Ghost] = [blinky,inky,pinky,sue]
+ghosts: list[Ghost] = []#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -111,6 +112,7 @@ def checkGhostCollision(pacMan:PacMan, ghosts:list[Ghost], gameStateService:Game
 
 
 direction_request = Directions.RIGHT
+pathingNodes = PathingNodes(board)
 #Main game loop
 while runGame:
     timer.tick(fps)
@@ -153,8 +155,9 @@ while runGame:
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
-    drawTileOutlines(screen, board)
-    
+    #drawTileOutlines(screen, board)
+    drawPathingNodes(screen, pathingNodes)
+    drawPathingNodeConnections(screen,pathingNodes)
     pacMan.draw(gameStateService)
     for g in ghosts:
         g.draw()

@@ -2,9 +2,23 @@ import pygame as pg
 import math
 
 from GameStateService import GameStateService
+from utilities.PathingNode import PathingNodes
 
 
 PI = math.pi #TODO: remove after replacing rendering with sprites
+
+
+def drawPathingNodes(screen, pathingNodes:PathingNodes):
+    for position in pathingNodes.nodeDict:
+        pg.draw.circle(screen,(255,0,255), ((30 * position[1]) + 15, (28 * position[0])+ 14),10)       
+
+def __convertPositionToScreenCords(position:tuple[int,int]):
+    return ((30 * position[1]) + 15, (28 * position[0])+ 14)
+
+def drawPathingNodeConnections(screen, pathingNodes:PathingNodes):
+    for pathingNode in pathingNodes.nodeDict.values():
+        for neighbor in pathingNode.neighbors:
+            pg.draw.line(screen,(225,0,225), __convertPositionToScreenCords(pathingNode.position), __convertPositionToScreenCords(neighbor[0].position),2)
 
 def drawTileOutlines(screen, board): #optional method to reveal tiles on board
     for row in range(len(board)):
