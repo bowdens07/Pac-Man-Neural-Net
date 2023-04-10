@@ -7,6 +7,11 @@ from utilities.PathingNode import PathingNodes
 
 PI = math.pi #TODO: remove after replacing rendering with sprites
 
+def getTileHeight(screen):
+    return (screen.get_height() - 50) // 32
+
+def getTileWidth(screen):
+    return screen.get_width() // 30
 
 def drawPathingNodes(screen, pathingNodes:PathingNodes):
     for position in pathingNodes.nodeDict:

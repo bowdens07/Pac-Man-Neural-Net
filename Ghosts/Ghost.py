@@ -1,8 +1,11 @@
 #this class relies on a lot of globals. Consider some services to maybe clean stuff up
 from abc import ABC, abstractmethod
+import math
 import pygame as pg
 from GameStateService import GameStateService
+from PacMan import PacMan
 from direction import Directions
+from graphics import getTileHeight, getTileWidth
 
 class Ghost:
     def __init__(ABC, gameStateService: GameStateService, screen: pg.Surface, board:list[list[int]], xPos:int, yPos:int):
@@ -53,16 +56,18 @@ class Ghost:
             ABC.speed = 2 
 
     def getCurrentTile(ABC):
-        tileHeight = (ABC.screen.get_height() - 50) // 32
-        tileWidth = ABC.screen.get_width() // 30
-        col = ABC.getCenterX() // tileWidth
-        row = ABC.getCenterY() // tileHeight
-        return (row,col)
+        col = ABC.getCenterX() // getTileWidth(ABC.screen)
+        row = ABC.getCenterY() // getTileHeight(ABC.screen)
+        return (row,col)        
+
+    def __distanceToPacManHeuristic(self,pacMan:PacMan):
+        ##TODO: more expensive than manhattan distance, and I think it would work
+        return math.sqrt(((self.xPos - pacMan.xPos) **2) + ((self.yPos - pacMan.yPos) ** 2))
 
     def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up 
         ABC.isInBox = False
-        tileHeight = (ABC.screen.get_height() - 50) // 32
-        tileWidth = ABC.screen.get_width() // 30
+        tileHeight = getTileHeight(ABC.screen)
+        tileWidth = getTileWidth(ABC.screen)
         fudgeFactor = 15
         ABC.turns = [False,False,False,False]
         if 0 < ABC.getCenterX() // 30 < 29:
