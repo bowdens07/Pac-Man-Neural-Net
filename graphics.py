@@ -1,9 +1,32 @@
 import pygame as pg
 import math
 
+from GameStateService import GameStateService
+
 
 PI = math.pi #TODO: remove after replacing rendering with sprites
 
+def drawTileOutlines(screen, board): #optional method to reveal tiles on board
+    for row in range(len(board)):
+        for col in range(len(board[row])):
+            rect = pg.Rect((30 * col), (28 * row), 30, 28)
+            pg.draw.rect(screen,'green', rect,1)
+
+def drawHud(gameStateService: GameStateService, screen, pacManImage, font): ##TODO bugged
+    scoreText = font.render(f'Score: {gameStateService.score}', True, 'white')
+    screen.blit(scoreText,(10,920))
+    for i in range(gameStateService.lives):
+        screen.blit(pg.transform.scale(pacManImage, (30,30)), (650 + i * 40, 915))
+    if(gameStateService.gameOver): ##compress this to a single function
+        pg.draw.rect(screen,'white', [50,200,800,300],0,10)
+        pg.draw.rect(screen,'dark gray', [70,220,768,268],0,10)
+        gameOverText = font.render('Game over! Space bar to restart!', True, "red")
+        screen.blit(gameOverText, (100,300))
+    if(gameStateService.gameWon):
+        pg.draw.rect(screen,'white', [50,200,800,300],0,10)
+        pg.draw.rect(screen,'dark gray', [70,220,768,268],0,10)
+        gameOverText = font.render('Victory! Space bar to restart!', True, 'white')
+        screen.blit(gameOverText, (100,300))
 
 def draw_board(screen,board, boardColor, screen_height, screen_width, flicker):
     tile_height = (screen_height - 50) // 32 #32 vertical tiles, leave 50 px for UI elements at bottom (may remove)
@@ -14,7 +37,7 @@ def draw_board(screen,board, boardColor, screen_height, screen_width, flicker):
 
     #pg.draw.rect(screen, (255,0,0), pg.Rect(345,380,210,110)) box
     #pg.draw.rect(screen, (0,0,255), pg.Rect(400,100,50,50)) leave box target
-    pg.draw.rect(screen, (0,0,255), pg.Rect(350,450,200,30)) #revive zone
+    #pg.draw.rect(screen, (0,0,255), pg.Rect(350,450,200,30)) #revive zone
 
     # not thrilled with this render method. It's a lot of math. Maybe consider some static calculations for each relevant position? Let's clock performance later to see if we train fast enough
     #I want to use sprites, this is going to kill performance if we draw all these shapes every frame.
