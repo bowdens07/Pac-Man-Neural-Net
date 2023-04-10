@@ -154,8 +154,6 @@ while runGame:
         pinky_x, pinky_y, pinkyDirection = pinky.moveSue()
         sue_x, sue_y, sueDirection = sue.moveSue()
 
-        blinkyTile = blinky.getCurrentTile()
-        print(f'BlinkyTile: {blinkyTile[0]},{blinkyTile[1]}')
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)

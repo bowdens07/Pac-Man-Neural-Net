@@ -43,6 +43,12 @@ class PacMan:
             return True
         return False
 
+    def getCurrentTile(self):
+        tileHeight = (self.screen.get_height() - 50) // 32
+        tileWidth = self.screen.get_width() // 30
+        col = self.getCenterX() // tileWidth
+        row = self.getCenterY() // tileHeight
+        return (row,col)
 
     def draw(self,gameStateService: GameStateService):
         self.hitbox = pg.draw.circle(self.screen, 'black', (self.getPacManCenterX(), self.getPacManCenterY()), 20, 2)
