@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 import math
 import pygame as pg
 from GameStateService import GameStateService
-from PacMan import PacMan
 from direction import Directions
 from graphics import getTileHeight, getTileWidth
 
@@ -60,9 +59,9 @@ class Ghost:
         row = ABC.getCenterY() // getTileHeight(ABC.screen)
         return (row,col)        
 
-    def __distanceToPacManHeuristic(self,pacMan:PacMan):
+    def __distanceToTargetHeuristic(self,position:tuple[int,int]):
         ##TODO: more expensive than manhattan distance, and I think it would work
-        return math.sqrt(((self.xPos - pacMan.xPos) **2) + ((self.yPos - pacMan.yPos) ** 2))
+        return math.sqrt(((self.xPos - position[0]) **2) + ((self.yPos - position[1]) ** 2))
 
     def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up 
         ABC.isInBox = False
