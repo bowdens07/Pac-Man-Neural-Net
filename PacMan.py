@@ -20,26 +20,26 @@ class PacMan:
         self.screen = screen
         self.board = board
         self.turnManager = TurnManager()
-        self.hitbox = pg.draw.circle(self.screen, 'black', (self.getPacManCenterX(), self.getPacManCenterY()), 20, 2)
+        self.hitbox = pg.draw.circle(self.screen, 'black', (self.getCenterX(), self.getCenterY()), 20, 2)
 
     def setNewBoard(self, board:list[list[int]]):
         self.board = board
 
-    def getPacManCenterX(self):
+    def getCenterX(self):
         return self.xPos + 22
 
-    def getPacManCenterY(self):
+    def getCenterY(self):
         return self.yPos + 23
     
     def isInMiddleOfTileX(self):
         tile_width = self.screen.get_width() // 30 #30 horizontal tiles
-        if 12 <= self.getPacManCenterX() % tile_width <= 18:
+        if 12 <= self.getCenterX() % tile_width <= 18:
             return True
         return False
 
     def isInMiddleOfTileY(self):
         tile_height = (self.screen.get_height() - 50) // 32 #32 vertical tiles
-        if 12 <= self.getPacManCenterY() % tile_height <= 18:
+        if 12 <= self.getCenterY() % tile_height <= 18:
             return True
         return False
 
@@ -51,7 +51,7 @@ class PacMan:
         return (row,col)
 
     def draw(self,gameStateService: GameStateService):
-        self.hitbox = pg.draw.circle(self.screen, 'black', (self.getPacManCenterX(), self.getPacManCenterY()), 20, 2)
+        self.hitbox = pg.draw.circle(self.screen, 'black', (self.getCenterX(), self.getCenterY()), 20, 2)
         if self.direction == Directions.RIGHT: 
             self.screen.blit(self.pacManImages[gameStateService.counter // 9], (self.xPos,self.yPos))
         elif self.direction == Directions.LEFT: 
@@ -67,11 +67,11 @@ class PacMan:
         tile_height = (self.screen.get_height() - 50) // 32 #32 vertical tiles
         tile_width = self.screen.get_width() // 30 #30 horizontal tiles
         if 0 < self.xPos < 870:
-            if self.board[self.getPacManCenterY() // tile_height][self.getPacManCenterX() // tile_width] == 1:
-                self.board[self.getPacManCenterY() // tile_height][self.getPacManCenterX() // tile_width] = 0 #eat the pellet
+            if self.board[self.getCenterY() // tile_height][self.getCenterX() // tile_width] == 1:
+                self.board[self.getCenterY() // tile_height][self.getCenterX() // tile_width] = 0 #eat the pellet
                 curScore += 10
-            if self.board[self.getPacManCenterY() // tile_height][self.getPacManCenterX() // tile_width] == 2:
-                self.board[self.getPacManCenterY() // tile_height][self.getPacManCenterX() // tile_width] = 0 #eat the pellet
+            if self.board[self.getCenterY() // tile_height][self.getCenterX() // tile_width] == 2:
+                self.board[self.getCenterY() // tile_height][self.getCenterX() // tile_width] = 0 #eat the pellet
                 curScore += 50
                 power = True
                 print("Power pellet Eaten")
@@ -95,41 +95,41 @@ class PacMan:
         if self.xPos //30 < 28 and self.xPos //30 > 0:
             #Can I reverse Direction?
             if self.direction == Directions.RIGHT: # <3 because board values 0,1,2 can be moved into, rest are walls
-                if self.board[self.getPacManCenterY() // tile_height][(self.getPacManCenterX() - fudgeFactor) // tile_width] < 3:
+                if self.board[self.getCenterY() // tile_height][(self.getCenterX() - fudgeFactor) // tile_width] < 3:
                     self.turnManager.left = True
             if self.direction == Directions.LEFT:
-                if self.board[self.getPacManCenterY() // tile_height][(self.getPacManCenterX() + fudgeFactor) // tile_width] < 3:
+                if self.board[self.getCenterY() // tile_height][(self.getCenterX() + fudgeFactor) // tile_width] < 3:
                     self.turnManager.right = True
             if self.direction == Directions.UP:
-                if self.board[(self.getPacManCenterY() + fudgeFactor) // tile_height][self.getPacManCenterX() // tile_width] < 3:
+                if self.board[(self.getCenterY() + fudgeFactor) // tile_height][self.getCenterX() // tile_width] < 3:
                     self.turnManager.down = True
             if self.direction == Directions.DOWN:
-                if self.board[(self.getPacManCenterY() - fudgeFactor) // tile_height][self.getPacManCenterX() // tile_width] < 3:
+                if self.board[(self.getCenterY() - fudgeFactor) // tile_height][self.getCenterX() // tile_width] < 3:
                     self.turnManager.up = True
 
             #Can I turn up or down?
             if self.direction == Directions.UP or self.direction == Directions.DOWN:
                 if(self.isInMiddleOfTileX()): #IF pac man is approximately horiztonatally in middle of tile
-                    if self.board[(self.getPacManCenterY() + fudgeFactor) // tile_height][self.getPacManCenterX() // tile_width] < 3:
+                    if self.board[(self.getCenterY() + fudgeFactor) // tile_height][self.getCenterX() // tile_width] < 3:
                         self.turnManager.down = True
-                    if self.board[(self.getPacManCenterY() - fudgeFactor) // tile_height][self.getPacManCenterX() // tile_width] < 3:
+                    if self.board[(self.getCenterY() - fudgeFactor) // tile_height][self.getCenterX() // tile_width] < 3:
                         self.turnManager.up = True
                 if(self.isInMiddleOfTileY()): #IF pac man is approximately horiztonatally in middle of tile
-                    if self.board[self.getPacManCenterY() // tile_height][(self.getPacManCenterX() - tile_width) // tile_width] < 3:
+                    if self.board[self.getCenterY() // tile_height][(self.getCenterX() - tile_width) // tile_width] < 3:
                         self.turnManager.left = True
-                    if self.board[self.getPacManCenterY() // tile_height][(self.getPacManCenterX() + tile_width) // tile_width] < 3:
+                    if self.board[self.getCenterY() // tile_height][(self.getCenterX() + tile_width) // tile_width] < 3:
                         self.turnManager.right = True
             #Can I turn left or right?
             if self.direction == Directions.RIGHT or self.direction == Directions.LEFT:
                 if(self.isInMiddleOfTileX()): #IF pac man is approximately horiztonatally in middle of tile
-                    if self.board[(self.getPacManCenterY() + fudgeFactor) // tile_height][self.getPacManCenterX() // tile_width] < 3:
+                    if self.board[(self.getCenterY() + fudgeFactor) // tile_height][self.getCenterX() // tile_width] < 3:
                         self.turnManager.down = True
-                    if self.board[(self.getPacManCenterY() - fudgeFactor) // tile_height][self.getPacManCenterX() // tile_width] < 3:
+                    if self.board[(self.getCenterY() - fudgeFactor) // tile_height][self.getCenterX() // tile_width] < 3:
                         self.turnManager.up = True
                 if(self.isInMiddleOfTileY()): #IF pac man is approximately vertically in middle of tile
-                    if self.board[self.getPacManCenterY() // tile_height][(self.getPacManCenterX() - fudgeFactor) // tile_width] < 3:
+                    if self.board[self.getCenterY() // tile_height][(self.getCenterX() - fudgeFactor) // tile_width] < 3:
                         self.turnManager.left = True
-                    if self.board[self.getPacManCenterY() // tile_height][(self.getPacManCenterX() + fudgeFactor) // tile_width] < 3:
+                    if self.board[self.getCenterY() // tile_height][(self.getCenterX() + fudgeFactor) // tile_width] < 3:
                         self.turnManager.right = True
         else: #This is for wrapping around the board horizontally. If you want to wrap vertically, this code must change
             self.turnManager.right = True
