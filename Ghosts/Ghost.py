@@ -52,8 +52,14 @@ class Ghost:
         else:
             ABC.speed = 2 
 
-    def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up
-        
+    def getCurrentTile(ABC):
+        tileHeight = (ABC.screen.get_height() - 50) // 32
+        tileWidth = ABC.screen.get_width() // 30
+        col = ABC.getCenterX() // tileWidth
+        row = ABC.getCenterY() // tileHeight
+        return (row,col)
+
+    def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up 
         ABC.isInBox = False
         tileHeight = (ABC.screen.get_height() - 50) // 32
         tileWidth = ABC.screen.get_width() // 30
