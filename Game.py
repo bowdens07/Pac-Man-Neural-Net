@@ -154,11 +154,15 @@ while runGame:
         #pinky.moveSue()
         #sue.moveSue()
 
-    print(f"pac man tile: {pacMan.getTilePosition()}")
+    pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
+    positions = ""
+    for neighbors in pacManNeighbors:
+        positions +=  f"{neighbors[0].position} "
+    print(f"pac man neighbors: {positions}")
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
-    #drawTileOutlines(screen, board)
+    drawTileOutlines(screen, board)
     drawPathingNodes(screen, pathingNodes)
     #drawPathingNodeConnections(screen,pathingNodes)
     pacMan.draw(gameStateService)

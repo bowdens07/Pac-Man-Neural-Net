@@ -41,7 +41,8 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
         self.nodeDict[(15,7)].neighbors.append([self.nodeDict[(15,22)],Directions.LEFT])
         self.nodeDict[(15,22)].neighbors.append([self.nodeDict[(15,7)],Directions.RIGHT])
 
-    def __getSearchPosition(basePosition:tuple[int,int], searchDirection:list[list[int]], counter:int): #This takes a direction and multiplies it by a counter to make a new ROW, COL space to search
+    #based on the direction and counter, get the next (row,col) to search 
+    def __getSearchPosition(basePosition:tuple[int,int], searchDirection:list[list[int]], counter:int) -> tuple[int,int]: #This takes a direction and multiplies it by a counter to make a new ROW, COL space to search
         return ((basePosition[0] + (counter * searchDirection[0])),(basePosition[1] + (counter * searchDirection[1])))
 
     def __interpretDirection(direction:list[int]) -> Directions:
@@ -98,3 +99,34 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
     def resetPacManNeighbors(self):
         for node in self.nodeDict.values():
             node.resetPacManNeighbor()
+
+    #For getting the current nodes neighboring pac-Man - if pac-Man is on a node, only return that node
+    #Given a row and column, get a list of neighboring nodes including the direction that node is to the given position
+    #TODO: does not handle wrapping case
+    def getNeighboringNodes(self,tilePosition:tuple[int,int], board:list[list[int]]) -> list[tuple[PathingNode, Directions]]:
+        foundNeighbors:list[tuple[PathingNode, Directions]] = []
+        if tilePosition in self.nodeDict.keys(): #The position is a node itself, therefore simply return that node 
+            foundNeighbors.append((self.nodeDict[tilePosition], Directions.RIGHT)) # The direction does not matter in this case
+            return foundNeighbors
+
+        searchDirections = [[1,0],[-1,0],[0,1],[0,-1]] #right, left, up down
+        for searchDirection in searchDirections:
+            counter = 1
+            searchPosition = PathingNodes.__getSearchPosition(tilePosition,searchDirection,counter)
+            while searchPosition[0] < 33 and searchPosition[1] < 30 and board[searchPosition[0]][searchPosition[1]] < 3:
+                if searchPosition in self.nodeDict.keys():
+                    neighbor = self.nodeDict[searchPosition] # a neighbor was found
+                    direction = PathingNodes.__reverseDirection(PathingNodes.__interpretDirection(searchDirection)) #get the direction to the source from neighbor's perspective
+                    foundNeighbors.append((neighbor,direction))
+                    break
+                counter += 1
+                searchPosition = PathingNodes.__getSearchPosition(tilePosition,searchDirection,counter)
+        #for board wrapping - This tells if position can wrap around the board
+        if tilePosition[0] == 15:
+            if tilePosition[1] > 22:
+                foundNeighbors.append((self.nodeDict[(15,7)],Directions.LEFT))
+            elif tilePosition[1] < 7:
+                foundNeighbors.append((self.nodeDict[(15,22)],Directions.RIGHT))
+                
+        return foundNeighbors
+            

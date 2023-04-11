@@ -65,19 +65,20 @@ class PacMan:
     #ghosts doesn't have to be returned as a shallow copy will do, but I will for now
     def checkCollisions(self,curScore, power, powerCount, ghosts: list[Ghost]):
         tilePosition = self.getTilePosition()
-        boardContent = self.board[tilePosition[0]][tilePosition[1]]
-        if 0 < self.xPos < 870:
-            if boardContent == 1:
-                self.board[tilePosition[0]][tilePosition[1]] = 0 #eat the pellet
-                curScore += 10
-            if boardContent == 2:
-                self.board[tilePosition[0]][tilePosition[1]] = 0 #eat the pellet
-                curScore += 50
-                power = True
-                print("Power pellet Eaten")
-                powerCount = 0
-                for g in ghosts: #maybe not pac man's job to toggle the ghosts, just report if it ate a power pellet
-                    g.isEaten = False
+        if tilePosition[0] < 32 and tilePosition[1] < 30:
+            boardContent = self.board[tilePosition[0]][tilePosition[1]]
+            if 0 < self.xPos < 870:
+                if boardContent == 1:
+                    self.board[tilePosition[0]][tilePosition[1]] = 0 #eat the pellet
+                    curScore += 10
+                if boardContent == 2:
+                    self.board[tilePosition[0]][tilePosition[1]] = 0 #eat the pellet
+                    curScore += 50
+                    power = True
+                    print("Power pellet Eaten")
+                    powerCount = 0
+                    for g in ghosts: #maybe not pac man's job to toggle the ghosts, just report if it ate a power pellet
+                        g.isEaten = False
         return curScore, power, powerCount 
 
     ## More likely I want to make a velocity system -> see if position + velocity is valid, then decide to move or not.
