@@ -31,6 +31,14 @@ def drawTileOutlines(screen, board): #optional method to reveal tiles on board
             rect = pg.Rect((30 * col), (28 * row), 30, 28)
             pg.draw.rect(screen,'green', rect,1)
 
+def drawFromPositionToPositions(position1:tuple[int,int],targets:list[tuple[int,int]], screen):
+    for target in targets:
+        drawLine(position1, target, screen)
+
+def drawLine(position1, position2, screen):
+    pg.draw.line(screen,(225,125,0), __convertPositionToScreenCords(position1), __convertPositionToScreenCords(position2),2)
+
+
 def drawHud(gameStateService: GameStateService, screen, pacManImage, font): ##TODO bugged
     scoreText = font.render(f'Score: {gameStateService.score}', True, 'white')
     screen.blit(scoreText,(10,920))

@@ -129,4 +129,10 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
                 foundNeighbors.append((self.nodeDict[(15,22)],Directions.RIGHT))
                 
         return foundNeighbors
+    
+
+    def addPacManNeighbors(self,pacManPosition:tuple[int,int], board:list[list[int]]):
+        pacManNeighbors = self.getNeighboringNodes(pacManPosition,board)
+        for neighbor in pacManNeighbors:
+            neighbor[0].setNeighborsPacMan(neighbor[1])
             

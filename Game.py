@@ -4,7 +4,7 @@ from Ghosts.Ghost import Ghost
 from PacMan import PacMan
 from direction import Directions
 from board import default_board
-from graphics import draw_board, drawHud, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
+from graphics import draw_board, drawFromPositionToPositions, drawHud, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
 from GameStateService import GameStateService
 from Ghosts.Blinky import Blinky
 from Ghosts.Inky import Inky
@@ -155,22 +155,26 @@ while runGame:
         #sue.moveSue()
 
     pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
-    positions = ""
-    for neighbors in pacManNeighbors:
-        positions +=  f"{neighbors[0].position} "
-    print(f"pac man neighbors: {positions}")
+    drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
     drawTileOutlines(screen, board)
     drawPathingNodes(screen, pathingNodes)
     #drawPathingNodeConnections(screen,pathingNodes)
+    drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
+
+    pathingNodes.addPacManNeighbors(pacMan.getTilePosition(),board) #Set the pathingNodes to know where pacManIs
+    
+
     pacMan.draw(gameStateService)
     for g in ghosts:
         g.draw()
         g.checkCollision()
         g.setNewTarget(pacMan.xPos,pacMan.yPos)
     
+    pathingNodes.resetPacManNeighbors() #After retargeting the ghosts clear pac-Man out the node's neighbors
+
     drawHud(gameStateService,screen, pacManImage, font)    
       
     #check for game win
