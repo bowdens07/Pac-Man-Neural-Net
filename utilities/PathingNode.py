@@ -13,6 +13,11 @@ class PathingNode:
     def setNeighborsPacMan(self, direction:Directions):
         self.neighborsPacMan = (True, direction)
 
+    def getDistanceFromPosition(self,targetPosition:tuple[int,int]):
+        verticalDistance = abs(self.position[0] - targetPosition[0])
+        horizontalDistance = abs(self.position[1] - targetPosition[1])
+        return verticalDistance + horizontalDistance
+        #Remember pathing nodes are always on the same row or column, so this is valid
 
 class PathingNodes: #uses the board to connect every pathing node to its neighbors
     def __init__(self, board): 

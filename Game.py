@@ -4,7 +4,7 @@ from Ghosts.Ghost import Ghost
 from PacMan import PacMan
 from direction import Directions
 from board import default_board
-from graphics import draw_board, drawFromPositionToPositions, drawHud, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
+from graphics import draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
 from GameStateService import GameStateService
 from Ghosts.Blinky import Blinky
 from Ghosts.Inky import Inky
@@ -37,7 +37,7 @@ blinky = Blinky(gameStateService, screen, board, 56,58)
 inky = Inky(gameStateService, screen, board, 440,388)
 pinky = Pinky(gameStateService, screen, board, 440,438)
 sue = Sue(gameStateService, screen, board, 440,438)
-ghosts: list[Ghost] = []#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = [blinky]#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -149,30 +149,41 @@ while runGame:
 
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
-        #blinky.moveSue()
+        blinky.moveSue()
         #inky.moveSue()
         #pinky.moveSue()
         #sue.moveSue()
 
     pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
-    drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
-    drawTileOutlines(screen, board)
-    drawPathingNodes(screen, pathingNodes)
+    #drawTileOutlines(screen, board)
+    #drawPathingNodes(screen, pathingNodes)
     #drawPathingNodeConnections(screen,pathingNodes)
-    drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
+    #drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
 
     pathingNodes.addPacManNeighbors(pacMan.getTilePosition(),board) #Set the pathingNodes to know where pacManIs
-    
 
     pacMan.draw(gameStateService)
     for g in ghosts:
         g.draw()
         g.checkCollision()
         g.setNewTarget(pacMan.xPos,pacMan.yPos)
+
+
+    #If blinky is on a pathing node, draw a green rectangle on him for debugging
+    if blinky.isOnPathingNode(pathingNodes):
+        pg.draw.rect(screen,'blue', [blinky.xPos + 10,blinky.yPos + 10,20,20],0,10)
     
+    path = blinky.secondGetAStarTarget(pacMan.getTilePosition(), pathingNodes)
+
+    if path is not None and len(path) > 0:
+        for i in range(len(path) -1):
+            drawLine(path[i].position, path[i + 1].position, screen)
+        drawLine(path[len(path) - 1].position, pacMan.getTilePosition(), screen)
+        
+
     pathingNodes.resetPacManNeighbors() #After retargeting the ghosts clear pac-Man out the node's neighbors
 
     drawHud(gameStateService,screen, pacManImage, font)    

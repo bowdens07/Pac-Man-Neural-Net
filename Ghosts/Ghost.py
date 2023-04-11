@@ -5,6 +5,8 @@ import pygame as pg
 from GameStateService import GameStateService
 from direction import Directions
 from graphics import getTileHeight, getTileWidth
+from utilities.PathingNode import PathingNode, PathingNodes
+from utilities.PriorityQueue import PriorityQueue
 
 class Ghost:
     def __init__(ABC, gameStateService: GameStateService, screen: pg.Surface, board:list[list[int]], xPos:int, yPos:int):
@@ -23,6 +25,8 @@ class Ghost:
         ABC.vulnerableGhostImage = pg.transform.scale(pg.image.load(f'assets/VulnerableGhost.png'),(45,45))
         ABC.deadGhostImage = pg.transform.scale(pg.image.load(f'assets/DeadEyesRight.png'),(45,45))
         ABC.isLeavingBox = False
+        #This is the last pathing node the ghost collided with - we use it to A* only once per node collision
+        ABC.lastPathingNodePosition = (0,0)
 
     @abstractmethod
     def _getGhostImage(ABC):
@@ -58,10 +62,87 @@ class Ghost:
         col = ABC.getCenterX() // getTileWidth(ABC.screen)
         row = ABC.getCenterY() // getTileHeight(ABC.screen)
         return (row,col)        
+    
+    def isOnPathingNode(ABC, pathingNodes: PathingNodes):
+        currentTile = ABC.getCurrentTile()
+        if currentTile in pathingNodes.nodeDict.keys():
+            ABC.lastPathingNodePosition = currentTile
+            return True
+        return False
+    
 
-    def __distanceToTargetHeuristic(self,position:tuple[int,int]):
+    def getHeuristicPlusPathCost(pathingNode:PathingNode, costSoFar:int,pacManPosiiton:tuple[int,int]) -> int:
+        return costSoFar + pathingNode.getDistanceFromPosition(pacManPosiiton)
+
+    #This method relies on PacMan being inside the PathingNodes Neighbors, if not, we'll search the whole space and probably crash
+    #Will only assign a target if Ghost is on a PathingNode
+
+    def getAStarTarget(ABC, pacManPosition:tuple[int,int], pathingNodes:PathingNodes):
+        #if ABC.isOnPathingNode(pathingNodes): TODO: enable this later
+            #Frontier holds each node to explore and the cost to reach them
+            frontier:list[tuple[PathingNode,int]] = []
+            exploredPositions:list[PathingNode] = []
+            frontier.append((pathingNodes.nodeDict[ABC.getCurrentTile()], 0))
+            while len(frontier) > 0:
+                #logic to choose which node to expand here
+                optimalCandidate = frontier[0]
+                for candidate in frontier:
+                    if Ghost.getHeuristicPlusPathCost(candidate[0],candidate[1], pacManPosition) < Ghost.getHeuristicPlusPathCost(optimalCandidate[0],optimalCandidate[1], pacManPosition):
+                        optimalCandidate = candidate
+                #We have now found the optimal candidate on the frontier, expand it
+                frontier.remove(optimalCandidate) #remove expanded node from the frontier
+                exploredPositions.append(optimalCandidate[0])
+
+                for neighbor in optimalCandidate[0].neighbors:
+                    if neighbor[0].neighborsPacMan:
+                        print("I found the end?")
+                    if neighbor[0] not in exploredPositions:
+                        frontier.append((neighbor[0], optimalCandidate[0].getDistanceFromPosition(neighbor[0].position) + optimalCandidate[1])) #add neighbor, with total path cost up to this point
+            return exploredPositions
+    
+    def secondGetAStarTarget(ABC, pacManPosition:tuple[int,int], pathingNodes:PathingNodes):
+        if ABC.isOnPathingNode(pathingNodes): #TODO: enable this later
+            frontier = PriorityQueue()
+            start = pathingNodes.nodeDict[ABC.getCurrentTile()]
+            frontier.put(start,0)
+            came_from: dict[PathingNode,PathingNode] = {}
+            cost_to_reach: dict[PathingNode,int] = {}
+
+            came_from[start] = None
+            cost_to_reach[start] = 0
+
+            while not frontier.empty():
+                currentNode = frontier.get()
+                if currentNode.neighborsPacMan[0]:
+                    break
+
+                for neighbor in currentNode.neighbors:
+                    newCost = cost_to_reach[currentNode] + neighbor[0].getDistanceFromPosition(currentNode.position)
+                    if neighbor[0] not in cost_to_reach.keys() or newCost < cost_to_reach[neighbor[0]]:
+                        cost_to_reach[neighbor[0]] = newCost
+                        priority = newCost + Ghost.__distanceToTargetHeuristic(neighbor[0].position, pacManPosition)
+                        frontier.put(neighbor[0],priority)
+                        came_from[neighbor[0]] = currentNode
+
+            revPath = [currentNode]
+            parent = came_from[currentNode]
+            while parent != None:
+                revPath.append(parent)
+                parent = came_from[parent]
+            path = []
+            while len(revPath) >0:
+                path.append(revPath.pop())
+            return path
+
+        #should be able to trace came_from up the chain. Not sure how to preserve the direction though...
+
+
+
+            
+
+    def __distanceToTargetHeuristic(position1:tuple[int,int],position2:tuple[int,int]):
         ##TODO: more expensive than manhattan distance, and I think it would work
-        return math.sqrt(((self.xPos - position[0]) **2) + ((self.yPos - position[1]) ** 2))
+        return math.sqrt(((position1[0] - position2[0]) **2) + ((position1[1] - position2[1]) ** 2))
 
     def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up 
         ABC.isInBox = False
