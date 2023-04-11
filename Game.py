@@ -37,7 +37,7 @@ blinky = Blinky(gameStateService, screen, board, 56,58)
 inky = Inky(gameStateService, screen, board, 440,388)
 pinky = Pinky(gameStateService, screen, board, 440,438)
 sue = Sue(gameStateService, screen, board, 440,438)
-ghosts: list[Ghost] = [blinky]#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = []#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -149,17 +149,18 @@ while runGame:
 
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
-        blinky_x, blinky_y, blinkyDirection = blinky.moveSue()
-        inky_x, inky_y, inkyDirection = inky.moveSue()
-        pinky_x, pinky_y, pinkyDirection = pinky.moveSue()
-        sue_x, sue_y, sueDirection = sue.moveSue()
+        #blinky.moveSue()
+        #inky.moveSue()
+        #pinky.moveSue()
+        #sue.moveSue()
 
+    print(f"pac man tile: {pacMan.getTilePosition()}")
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
-    drawTileOutlines(screen, board)
+    #drawTileOutlines(screen, board)
     drawPathingNodes(screen, pathingNodes)
-    drawPathingNodeConnections(screen,pathingNodes)
+    #drawPathingNodeConnections(screen,pathingNodes)
     pacMan.draw(gameStateService)
     for g in ghosts:
         g.draw()

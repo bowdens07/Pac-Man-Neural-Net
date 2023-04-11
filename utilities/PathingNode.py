@@ -7,6 +7,11 @@ class PathingNode:
         self.row = position[0]
         self.col = position[1]
         self.position: tuple[int,int] = position #redudnant, but easier for reasoning
+        self.neighborsPacMan = (False,Directions.RIGHT) #if it neighbors pac man and if so what direction
+    def resetPacManNeighbor(self):
+        self.neighborsPacMan = (False,Directions.RIGHT)
+    def setNeighborsPacMan(self, direction:Directions):
+        self.neighborsPacMan = (True, direction)
 
 
 class PathingNodes: #uses the board to connect every pathing node to its neighbors
@@ -90,4 +95,6 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
                 counter += 1
                 searchPosition = PathingNodes.__getSearchPosition(node.position,searchDirection,counter)
 
-
+    def resetPacManNeighbors(self):
+        for node in self.nodeDict.values():
+            node.resetPacManNeighbor()

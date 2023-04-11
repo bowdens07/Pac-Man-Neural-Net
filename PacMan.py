@@ -43,7 +43,7 @@ class PacMan:
             return True
         return False
 
-    def getCurrentTile(self):
+    def getTilePosition(self) -> tuple[int,int]:
         tileHeight = (self.screen.get_height() - 50) // 32
         tileWidth = self.screen.get_width() // 30
         col = self.getCenterX() // tileWidth
@@ -64,14 +64,14 @@ class PacMan:
 
     #ghosts doesn't have to be returned as a shallow copy will do, but I will for now
     def checkCollisions(self,curScore, power, powerCount, ghosts: list[Ghost]):
-        tile_height = (self.screen.get_height() - 50) // 32 #32 vertical tiles
-        tile_width = self.screen.get_width() // 30 #30 horizontal tiles
+        tilePosition = self.getTilePosition()
+        boardContent = self.board[tilePosition[0]][tilePosition[1]]
         if 0 < self.xPos < 870:
-            if self.board[self.getCenterY() // tile_height][self.getCenterX() // tile_width] == 1:
-                self.board[self.getCenterY() // tile_height][self.getCenterX() // tile_width] = 0 #eat the pellet
+            if boardContent == 1:
+                self.board[tilePosition[0]][tilePosition[1]] = 0 #eat the pellet
                 curScore += 10
-            if self.board[self.getCenterY() // tile_height][self.getCenterX() // tile_width] == 2:
-                self.board[self.getCenterY() // tile_height][self.getCenterX() // tile_width] = 0 #eat the pellet
+            if boardContent == 2:
+                self.board[tilePosition[0]][tilePosition[1]] = 0 #eat the pellet
                 curScore += 50
                 power = True
                 print("Power pellet Eaten")
