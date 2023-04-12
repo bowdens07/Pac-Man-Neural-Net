@@ -27,6 +27,7 @@ class Ghost:
         ABC.isLeavingBox = False
         #This is the last pathing node the ghost collided with - we use it to A* only once per node collision
         ABC.lastPathingNodePosition = (0,0)
+        ABC.CurrentPath: list[PathingNode] = []
 
     @abstractmethod
     def _getGhostImage(ABC):
@@ -75,33 +76,9 @@ class Ghost:
         return costSoFar + pathingNode.getDistanceFromPosition(pacManPosiiton)
 
     #This method relies on PacMan being inside the PathingNodes Neighbors, if not, we'll search the whole space and probably crash
-    #Will only assign a target if Ghost is on a PathingNode
-
+    #Will only assign a target if Ghost is on a PathingNode and it doesn't have a path or it's on a new pathing node
     def getAStarTarget(ABC, pacManPosition:tuple[int,int], pathingNodes:PathingNodes):
-        #if ABC.isOnPathingNode(pathingNodes): TODO: enable this later
-            #Frontier holds each node to explore and the cost to reach them
-            frontier:list[tuple[PathingNode,int]] = []
-            exploredPositions:list[PathingNode] = []
-            frontier.append((pathingNodes.nodeDict[ABC.getCurrentTile()], 0))
-            while len(frontier) > 0:
-                #logic to choose which node to expand here
-                optimalCandidate = frontier[0]
-                for candidate in frontier:
-                    if Ghost.getHeuristicPlusPathCost(candidate[0],candidate[1], pacManPosition) < Ghost.getHeuristicPlusPathCost(optimalCandidate[0],optimalCandidate[1], pacManPosition):
-                        optimalCandidate = candidate
-                #We have now found the optimal candidate on the frontier, expand it
-                frontier.remove(optimalCandidate) #remove expanded node from the frontier
-                exploredPositions.append(optimalCandidate[0])
-
-                for neighbor in optimalCandidate[0].neighbors:
-                    if neighbor[0].neighborsPacMan:
-                        print("I found the end?")
-                    if neighbor[0] not in exploredPositions:
-                        frontier.append((neighbor[0], optimalCandidate[0].getDistanceFromPosition(neighbor[0].position) + optimalCandidate[1])) #add neighbor, with total path cost up to this point
-            return exploredPositions
-    
-    def secondGetAStarTarget(ABC, pacManPosition:tuple[int,int], pathingNodes:PathingNodes):
-        if ABC.isOnPathingNode(pathingNodes): #TODO: enable this later
+        if ABC.isOnPathingNode(pathingNodes) and (len(ABC.CurrentPath) == 0 or ABC.CurrentPath[0].position != ABC.getCurrentTile()): #TODO: enable this later
             frontier = PriorityQueue()
             start = pathingNodes.nodeDict[ABC.getCurrentTile()]
             frontier.put(start,0)
@@ -132,8 +109,10 @@ class Ghost:
             path = []
             while len(revPath) >0:
                 path.append(revPath.pop())
+            ABC.CurrentPath = path
             return path
-
+        else:
+            return ABC.CurrentPath
         #should be able to trace came_from up the chain. Not sure how to preserve the direction though...
 
 

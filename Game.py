@@ -176,7 +176,7 @@ while runGame:
     if blinky.isOnPathingNode(pathingNodes):
         pg.draw.rect(screen,'blue', [blinky.xPos + 10,blinky.yPos + 10,20,20],0,10)
     
-    path = blinky.secondGetAStarTarget(pacMan.getTilePosition(), pathingNodes)
+    path = blinky.getAStarTarget(pacMan.getTilePosition(), pathingNodes)
 
     if path is not None and len(path) > 0:
         for i in range(len(path) -1):
