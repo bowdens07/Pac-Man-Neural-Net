@@ -159,11 +159,11 @@ while runGame:
         #pinky.moveSue()
         #sue.moveSue()
 
-    pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
-    neighborstr = ""
-    for neighbor in pacManNeighbors:
-        neighborstr += f"{neighbor[0].position},"
-    print(neighborstr)
+    #pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
+    #neighborstr = ""
+    #for neighbor in pacManNeighbors:
+    #    neighborstr += f"{neighbor[0].position},"
+    #print(neighborstr)
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
@@ -182,8 +182,8 @@ while runGame:
 
 
     #If blinky is on a pathing node, draw a green rectangle on him for debugging
-    #if blinky.isOnPathingNode(pathingNodes):
-    #    pg.draw.rect(screen,'blue', [blinky.xPos + 10,blinky.yPos + 10,20,20],0,10)
+    if blinky.isOnPathingNode(pathingNodes):
+        pg.draw.rect(screen,'blue', [blinky.xPos + 10,blinky.yPos + 10,20,20],0,10)
     path = blinky.CurrentPath
     if path is not None and len(path) > 0:
         for i in range(len(path) -1):

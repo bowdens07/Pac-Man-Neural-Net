@@ -31,19 +31,19 @@ class Blinky(Ghost):
         else:
             print("Warning: Blinky doesn't have a path")
 
-        self.__moveGhostforward()
+        self.__moveGhostforward(validDirections)
         #Wrap the ghosts through the tunnel
         if self.xPos < -30:
             self.xPos = 900
         elif self.xPos > 900:
-            self.xPos - 30
+            self.xPos = -30
 
-    def __moveGhostforward(self):
-        if self.direction == Directions.RIGHT:
+    def __moveGhostforward(self, validDirections:list[bool]):
+        if self.direction == Directions.RIGHT and validDirections[Directions.RIGHT.value]:
             self.xPos += self.speed
-        elif self.direction == Directions.LEFT:
+        elif self.direction == Directions.LEFT and validDirections[Directions.LEFT.value]:
             self.xPos -= self.speed
-        elif self.direction == Directions.UP:
+        elif self.direction == Directions.UP and validDirections[Directions.UP.value]:
             self.yPos -= self.speed
-        elif self.direction == Directions.DOWN:
+        elif self.direction == Directions.DOWN and validDirections[Directions.DOWN.value]:
             self.yPos += self.speed
