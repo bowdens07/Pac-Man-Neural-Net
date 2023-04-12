@@ -18,6 +18,13 @@ class PathingNode:
         horizontalDistance = abs(self.position[1] - targetPosition[1])
         return verticalDistance + horizontalDistance
         #Remember pathing nodes are always on the same row or column, so this is valid
+    
+    #Gets the direction to the provided neighbor
+    def getDirectionToNeighbor(self, neighbor) -> Directions:
+        knownNeighbor = [existingNeighbor for existingNeighbor in self.neighbors if existingNeighbor[0] == neighbor]
+        if len(knownNeighbor) == 0:
+            return None
+        return knownNeighbor[0][1]
 
 class PathingNodes: #uses the board to connect every pathing node to its neighbors
     def __init__(self, board): 
@@ -52,13 +59,13 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
 
     def __interpretDirection(direction:list[int]) -> Directions:
         if direction == [0,1]:
-            return Directions.UP
-        if direction == [0,-1]:
-            return Directions.DOWN
-        if direction == [1,0]:
             return Directions.RIGHT
-        if direction == [-1,0]:
+        if direction == [0,-1]:
             return Directions.LEFT
+        if direction == [1,0]:
+            return Directions.DOWN
+        if direction == [-1,0]:
+            return Directions.UP
 
     def __getPossibleSearchDirections(curSearchDirection):
         #whever you came from, you cannot search back that way, cuts down on the algorithm redudancy 

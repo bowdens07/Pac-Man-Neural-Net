@@ -4,7 +4,7 @@ from Ghosts.Ghost import Ghost
 from PacMan import PacMan
 from direction import Directions
 from board import default_board
-from graphics import draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
+from graphics import convertPositionToScreenCords, draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
 from GameStateService import GameStateService
 from Ghosts.Blinky import Blinky
 from Ghosts.Inky import Inky
@@ -33,7 +33,8 @@ gameStateService = GameStateService()
 
 pacMan = PacMan(gameStateService, screen, board, 450,663)
 
-blinky = Blinky(gameStateService, screen, board, 56,58)
+#Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
+blinky = Blinky(gameStateService, screen, board, 53,48)
 inky = Inky(gameStateService, screen, board, 440,388)
 pinky = Pinky(gameStateService, screen, board, 440,438)
 sue = Sue(gameStateService, screen, board, 440,438)
@@ -53,8 +54,8 @@ def resetPositions():
     pacMan.direction = Directions.RIGHT
     pacMan.turnManager.resetTurns()
     
-    blinky.xPos = 56
-    blinky.yPos = 58
+    blinky.xPos = 53
+    blinky.yPos = 48
     blinky.direction = Directions.RIGHT
     blinky.isDead = False
     blinky.isEaten = False
@@ -147,23 +148,29 @@ while runGame:
     for g in ghosts:
         g.updateSpeed()
 
+    
+    
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
-        blinky.moveSue()
+
+        pathingNodes.addPacManNeighbors(pacMan.getTilePosition(),board) #Set the pathingNodes to know where pacManIs
+        blinky.moveGhost(pacMan.getTilePosition(),pathingNodes)
         #inky.moveSue()
         #pinky.moveSue()
         #sue.moveSue()
 
     pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
+    neighborstr = ""
+    for neighbor in pacManNeighbors:
+        neighborstr += f"{neighbor[0].position},"
+    print(neighborstr)
 
     gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
-    #drawTileOutlines(screen, board)
+    drawTileOutlines(screen, board)
     #drawPathingNodes(screen, pathingNodes)
     #drawPathingNodeConnections(screen,pathingNodes)
     #drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
-
-    pathingNodes.addPacManNeighbors(pacMan.getTilePosition(),board) #Set the pathingNodes to know where pacManIs
 
     pacMan.draw(gameStateService)
     for g in ghosts:
@@ -171,17 +178,17 @@ while runGame:
         g.checkCollision()
         g.setNewTarget(pacMan.xPos,pacMan.yPos)
 
+    pg.draw.circle(screen,(255,0,255), convertPositionToScreenCords((2,2)),10)       
+
 
     #If blinky is on a pathing node, draw a green rectangle on him for debugging
-    if blinky.isOnPathingNode(pathingNodes):
-        pg.draw.rect(screen,'blue', [blinky.xPos + 10,blinky.yPos + 10,20,20],0,10)
-    
-    path = blinky.getAStarTarget(pacMan.getTilePosition(), pathingNodes)
-
+    #if blinky.isOnPathingNode(pathingNodes):
+    #    pg.draw.rect(screen,'blue', [blinky.xPos + 10,blinky.yPos + 10,20,20],0,10)
+    path = blinky.CurrentPath
     if path is not None and len(path) > 0:
         for i in range(len(path) -1):
-            drawLine(path[i].position, path[i + 1].position, screen)
-        drawLine(path[len(path) - 1].position, pacMan.getTilePosition(), screen)
+            drawLine(path[i].position, path[i + 1].position, screen,(255,0,0))
+        drawLine(path[len(path) - 1].position, pacMan.getTilePosition(), screen,(255,0,0))
         
 
     pathingNodes.resetPacManNeighbors() #After retargeting the ghosts clear pac-Man out the node's neighbors

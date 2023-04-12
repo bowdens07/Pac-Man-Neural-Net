@@ -4,7 +4,7 @@ import math
 import pygame as pg
 from GameStateService import GameStateService
 from direction import Directions
-from graphics import getTileHeight, getTileWidth
+from graphics import convertPositionToScreenCords, getTileHeight, getTileWidth
 from utilities.PathingNode import PathingNode, PathingNodes
 from utilities.PriorityQueue import PriorityQueue
 
@@ -19,6 +19,7 @@ class Ghost:
         ABC.speed = 2
         ABC.image = ABC._getGhostImage()
         ABC.direction = Directions.RIGHT
+        ABC.dirRequest = Directions.RIGHT
         ABC.isDead = False
         ABC.isEaten = False
         ABC.turns, ABC.isInBox = ABC.checkCollision()
@@ -30,7 +31,7 @@ class Ghost:
         ABC.CurrentPath: list[PathingNode] = []
 
     @abstractmethod
-    def _getGhostImage(ABC):
+    def _getGhostImage(ABC) -> pg.Surface:
         pass
 
     def getCenterX(ABC):
@@ -64,6 +65,12 @@ class Ghost:
         row = ABC.getCenterY() // getTileHeight(ABC.screen)
         return (row,col)        
     
+    def isOnCenterOfTile(ABC):
+        currentTile = ABC.getCurrentTile()
+        (tileX, tileY) = convertPositionToScreenCords(currentTile)
+        return abs(tileX - ABC.getCenterX()) == 0 and abs(tileY - ABC.getCenterY()) == 0
+
+
     def isOnPathingNode(ABC, pathingNodes: PathingNodes):
         currentTile = ABC.getCurrentTile()
         if currentTile in pathingNodes.nodeDict.keys():
@@ -75,10 +82,17 @@ class Ghost:
     def getHeuristicPlusPathCost(pathingNode:PathingNode, costSoFar:int,pacManPosiiton:tuple[int,int]) -> int:
         return costSoFar + pathingNode.getDistanceFromPosition(pacManPosiiton)
 
+    def snapToCenterOfTile(ABC, target: tuple[int,int]):
+        (xPos, yPos) = convertPositionToScreenCords(target)
+        ABC.xPos = xPos - 22
+        ABC.yPos = yPos - 22
+
     #This method relies on PacMan being inside the PathingNodes Neighbors, if not, we'll search the whole space and probably crash
     #Will only assign a target if Ghost is on a PathingNode and it doesn't have a path or it's on a new pathing node
-    def getAStarTarget(ABC, pacManPosition:tuple[int,int], pathingNodes:PathingNodes):
-        if ABC.isOnPathingNode(pathingNodes) and (len(ABC.CurrentPath) == 0 or ABC.CurrentPath[0].position != ABC.getCurrentTile()): #TODO: enable this later
+    def getAStarTarget(ABC, pacManPosition:tuple[int,int], pathingNodes:PathingNodes) -> tuple[bool, list[PathingNode]]:
+        hasGeneratedNewPath = False
+        if ABC.isOnPathingNode(pathingNodes) and ABC.isOnCenterOfTile() and (len(ABC.CurrentPath) == 0 or ABC.CurrentPath[0].position != ABC.getCurrentTile()):
+            ABC.snapToCenterOfTile(ABC.getCurrentTile())
             frontier = PriorityQueue()
             start = pathingNodes.nodeDict[ABC.getCurrentTile()]
             frontier.put(start,0)
@@ -107,13 +121,13 @@ class Ghost:
                 revPath.append(parent)
                 parent = came_from[parent]
             path = []
-            while len(revPath) >0:
+            while len(revPath) > 0:
                 path.append(revPath.pop())
             ABC.CurrentPath = path
-            return path
+            hasGeneratedNewPath = True
+            return (hasGeneratedNewPath,path)
         else:
-            return ABC.CurrentPath
-        #should be able to trace came_from up the chain. Not sure how to preserve the direction though...
+            return (hasGeneratedNewPath,ABC.CurrentPath)
 
 
 
@@ -196,6 +210,10 @@ class Ghost:
         else:
             ABC.isInBox = False
         return ABC.turns, ABC.isInBox
+
+    @abstractmethod
+    def moveGhost(ABC):
+        pass
 
     def moveSue(ABC): #TODO bugged - if the ghosts move off screen they get stuck
         if ABC.direction == 0:

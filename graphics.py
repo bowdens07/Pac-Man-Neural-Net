@@ -17,13 +17,13 @@ def drawPathingNodes(screen, pathingNodes:PathingNodes):
     for position in pathingNodes.nodeDict:
         pg.draw.circle(screen,(255,0,255), ((30 * position[1]) + 15, (28 * position[0])+ 14),10)       
 
-def __convertPositionToScreenCords(position:tuple[int,int]):
+def convertPositionToScreenCords(position:tuple[int,int]):
     return ((30 * position[1]) + 15, (28 * position[0])+ 14)
 
 def drawPathingNodeConnections(screen, pathingNodes:PathingNodes):
     for pathingNode in pathingNodes.nodeDict.values():
         for neighbor in pathingNode.neighbors:
-            pg.draw.line(screen,(225,0,225), __convertPositionToScreenCords(pathingNode.position), __convertPositionToScreenCords(neighbor[0].position),2)
+            pg.draw.line(screen,(225,0,225), convertPositionToScreenCords(pathingNode.position), convertPositionToScreenCords(neighbor[0].position),2)
 
 def drawTileOutlines(screen, board): #optional method to reveal tiles on board
     for row in range(len(board)):
@@ -31,12 +31,12 @@ def drawTileOutlines(screen, board): #optional method to reveal tiles on board
             rect = pg.Rect((30 * col), (28 * row), 30, 28)
             pg.draw.rect(screen,'green', rect,1)
 
-def drawFromPositionToPositions(position1:tuple[int,int],targets:list[tuple[int,int]], screen):
+def drawFromPositionToPositions(position1:tuple[int,int],targets:list[tuple[int,int]], screen, color):
     for target in targets:
-        drawLine(position1, target, screen)
+        drawLine(position1, target, screen, color)
 
-def drawLine(position1, position2, screen):
-    pg.draw.line(screen,(225,125,0), __convertPositionToScreenCords(position1), __convertPositionToScreenCords(position2),2)
+def drawLine(position1, position2, screen, color):
+    pg.draw.line(screen,color, convertPositionToScreenCords(position1), convertPositionToScreenCords(position2),2)
 
 
 def drawHud(gameStateService: GameStateService, screen, pacManImage, font): ##TODO bugged
