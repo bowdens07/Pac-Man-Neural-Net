@@ -68,7 +68,7 @@ class Ghost:
     def isOnCenterOfTile(ABC):
         currentTile = ABC.getCurrentTile()
         (tileX, tileY) = convertPositionToScreenCords(currentTile)
-        return abs(tileX - ABC.getCenterX()) == 0 and abs(tileY - ABC.getCenterY()) == 0
+        return abs(tileX - ABC.getCenterX()) < 2 and abs(tileY - ABC.getCenterY()) < 2
 
 
     def isOnPathingNode(ABC, pathingNodes: PathingNodes):
