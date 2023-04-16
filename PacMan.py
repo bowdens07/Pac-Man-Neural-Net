@@ -1,6 +1,7 @@
 import pygame as pg
 from GameStateService import GameStateService
 from Ghosts.Ghost import Ghost
+from board import isAWall, isInBox, isValidPosition
 
 from direction import Directions
 from utilities.TurnManager import TurnManager
@@ -49,6 +50,32 @@ class PacMan:
         col = self.getCenterX() // tileWidth
         row = self.getCenterY() // tileHeight
         return (row,col)
+    
+    #Gets four tiles ahead of pac-Man's current direction. If a wall is four tiles out, gets the next nearest position, stopping on pacMan - used for Pinky chasing
+    def getFourTilesAhead(self) -> tuple[int,int]:
+        (pacManRow, pacManColumn) = self.getTilePosition()
+        if self.direction == Directions.RIGHT:
+            pacManColumn += 4
+            while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
+                pacManColumn -= 1
+        if self.direction == Directions.LEFT:
+            pacManColumn -= 4
+            while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
+                pacManColumn += 1
+        if self.direction == Directions.UP:
+            pacManRow -= 4
+            while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
+                pacManRow += 1
+        if self.direction == Directions.DOWN:
+            pacManRow += 4
+            while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
+                pacManRow -= 1
+
+        if(isInBox((pacManRow, pacManColumn))): #If pac man is aiming into the box, just use Pac Man's position
+            return self.getTilePosition()
+        
+        return (pacManRow,pacManColumn)
+           
 
     def draw(self,gameStateService: GameStateService):
         self.hitbox = pg.draw.circle(self.screen, 'black', (self.getCenterX(), self.getCenterY()), 20, 2)

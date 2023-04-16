@@ -2,7 +2,7 @@ import pygame as pg
 import math
 
 from GameStateService import GameStateService
-from utilities.PathingNode import PathingNodes
+from utilities.PathingNode import PathingNode, PathingNodes
 
 
 PI = math.pi #TODO: remove after replacing rendering with sprites
@@ -38,6 +38,10 @@ def drawFromPositionToPositions(position1:tuple[int,int],targets:list[tuple[int,
 def drawLine(position1, position2, screen, color):
     pg.draw.line(screen,color, convertPositionToScreenCords(position1), convertPositionToScreenCords(position2),2)
 
+def drawPath(path:list[PathingNode], color:tuple[int,int,int], screen):
+    if path is not None and len(path) > 0:
+        for i in range(len(path) -1):
+            drawLine(path[i].position, path[i + 1].position, screen,color)
 
 def drawHud(gameStateService: GameStateService, screen, pacManImage, font): ##TODO bugged
     scoreText = font.render(f'Score: {gameStateService.score}', True, 'white')

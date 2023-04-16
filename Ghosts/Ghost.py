@@ -104,7 +104,7 @@ class Ghost:
 
             while not frontier.empty():
                 currentNode = frontier.get()
-                if currentNode.neighborsPacMan[0]:
+                if currentNode.neighborsTarget[0]:
                     break
 
                 for neighbor in currentNode.neighbors:
@@ -129,8 +129,40 @@ class Ghost:
         else:
             return (hasGeneratedNewPath,ABC.CurrentPath)
 
+    def moveToAStarTarget(ABC, target: tuple[int,int], pathingNodes: PathingNodes):
+        (hasGeneratedNewPath, path) = ABC.getAStarTarget(target,pathingNodes)
+        if len(path) > 0:
+            #Get the direction the ghost wants to go
+            SourceNode = path[0]
+            if hasGeneratedNewPath:
+                if SourceNode.neighborsTarget[0]: #If The Source node neighbors pac man, just go towards Pac-Man
+                    ABC.dirRequest = SourceNode.neighborsTarget[1]
+                else:
+                    ABC.dirRequest = SourceNode.getDirectionToNeighbor(path[1])
+            #Get the directions the ghost can go
+            (validDirections, isInBox) = ABC.checkCollision()
+            #The enum Directions corresponds to the list of bools
+            if validDirections[ABC.dirRequest.value]:
+                ABC.direction= ABC.dirRequest
+        else:
+            print("Warning: Blinky doesn't have a path")
 
+        ABC.__moveGhostforward(validDirections)
+        #Wrap the ghosts through the tunnel
+        if ABC.xPos < -30:
+            ABC.xPos = 900
+        elif ABC.xPos > 900:
+            ABC.xPos = -30
 
+    def __moveGhostforward(ABC, validDirections:list[bool]):
+        if ABC.direction == Directions.RIGHT and validDirections[Directions.RIGHT.value]:
+            ABC.xPos += ABC.speed
+        elif ABC.direction == Directions.LEFT and validDirections[Directions.LEFT.value]:
+            ABC.xPos -= ABC.speed
+        elif ABC.direction == Directions.UP and validDirections[Directions.UP.value]:
+            ABC.yPos -= ABC.speed
+        elif ABC.direction == Directions.DOWN and validDirections[Directions.DOWN.value]:
+            ABC.yPos += ABC.speed
             
 
     def __distanceToTargetHeuristic(position1:tuple[int,int],position2:tuple[int,int]):

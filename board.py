@@ -38,5 +38,14 @@ default_board = [
 [7, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8]
          ]
 
+def isValidPosition(position:tuple[int,int]) -> bool:
+    return position[0] < len(default_board) and position[1] < len(default_board[0])
+
+def isAWall(position:tuple[int,int])-> bool:
+    return default_board[position[0]][position[1]] >= 3
+
+def isInBox(position:tuple[int,int])->bool:
+     return  (position[0] > 13 and position[0] < 17) and (position [1] > 11 and position[1] < 18)
+
 print(len(default_board))
 print(len(default_board[0]))

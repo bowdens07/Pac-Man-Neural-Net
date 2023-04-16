@@ -7,4 +7,4 @@ class Inky(Ghost):
         return (self._getOppositeSideTarget(pacMan_x,pacMan_y)[0], pacMan_y)
     
     def _getGhostImage(ABC):
-        return pg.transform.scale(pg.image.load(f'assets/Pinky.png'),(45,45))
+        return pg.transform.scale(pg.image.load(f'assets/Inky.png'),(45,45))

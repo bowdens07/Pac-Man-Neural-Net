@@ -4,13 +4,13 @@ from Ghosts.Ghost import Ghost
 from PacMan import PacMan
 from direction import Directions
 from board import default_board
-from graphics import convertPositionToScreenCords, draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
+from graphics import convertPositionToScreenCords, draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPath, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
 from GameStateService import GameStateService
 from Ghosts.Blinky import Blinky
 from Ghosts.Inky import Inky
 from Ghosts.Pinky import Pinky
 from Ghosts.Sue import Sue
-from utilities.PathingNode import PathingNodes
+from utilities.PathingNode import PathingNode, PathingNodes
 
 
 pg.init()
@@ -36,9 +36,9 @@ pacMan = PacMan(gameStateService, screen, board, 450,663)
 #Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
 blinky = Blinky(gameStateService, screen, board, 53,48)
 inky = Inky(gameStateService, screen, board, 440,388)
-pinky = Pinky(gameStateService, screen, board, 440,438)
+pinky = Pinky(gameStateService, screen, board, 53,48)
 sue = Sue(gameStateService, screen, board, 440,438)
-ghosts: list[Ghost] = [blinky]#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = [pinky]#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -66,8 +66,10 @@ def resetPositions():
     inky.isDead = False
     inky.isEaten = False
 
-    pinky.xPos = 440
-    pinky.yPos = 438
+    #pinky.xPos = 440
+    #pinky.yPos = 438
+    pinky.xPos = 53
+    pinky.yPos = 48
     pinky.direction = Directions.UP
     pinky.isDead = False
     pinky.isEaten = False
@@ -152,11 +154,9 @@ while runGame:
     
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
-
-        pathingNodes.addPacManNeighbors(pacMan.getTilePosition(),board) #Set the pathingNodes to know where pacManIs
-        blinky.moveGhost(pacMan.getTilePosition(),pathingNodes)
+        blinky.moveGhost(pacMan.getTilePosition(),pathingNodes.getCopyWithTarget(pacMan.getFourTilesAhead(),board))
         #inky.moveSue()
-        #pinky.moveSue()
+        pinky.moveGhost(pacMan.getFourTilesAhead(),pathingNodes.getCopyWithTarget(pacMan.getFourTilesAhead(),board))
         #sue.moveSue()
 
     #pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
@@ -181,18 +181,25 @@ while runGame:
     pg.draw.circle(screen,(255,0,255), convertPositionToScreenCords((2,2)),10)       
 
 
-    #If blinky is on a pathing node, draw a green rectangle on him for debugging
-    if blinky.isOnPathingNode(pathingNodes):
-        pg.draw.rect(screen,'blue', [blinky.xPos + 10,blinky.yPos + 10,20,20],0,10)
-    path = blinky.CurrentPath
-    if path is not None and len(path) > 0:
-        for i in range(len(path) -1):
-            drawLine(path[i].position, path[i + 1].position, screen,(255,0,0))
-        drawLine(path[len(path) - 1].position, pacMan.getTilePosition(), screen,(255,0,0))
-        
+    #If blinky is on a pathing node, draw a green rectangle on him: for debugging
+    #if blinky.isOnPathingNode(pathingNodes):
+    #    pg.draw.rect(screen,'blue', [blinky.xPos + 10,blinky.yPos + 10,20,20],0,10)
 
-    pathingNodes.resetPacManNeighbors() #After retargeting the ghosts clear pac-Man out the node's neighbors
+    #Draw the tile four tiles ahead of pac-man
+    #fourTilesAhead = pacMan.getFourTilesAhead()
+    #fourTilesCoords = convertPositionToScreenCords(fourTilesAhead)
+    #pg.draw.rect(screen,'blue', pg.Rect(fourTilesCoords[0],fourTilesCoords[1],20,20),0,10)
 
+    #path = blinky.CurrentPath
+    #if path is not None and len(path) > 0:
+    #    for i in range(len(path) -1):
+    #        drawLine(path[i].position, path[i + 1].position, screen,(255,0,0))
+    #    drawLine(path[len(path) - 1].position, pacMan.getTilePosition(), screen,(255,0,0))
+    
+
+    drawPath(pinky.CurrentPath, (255,192,203), screen)
+    drawPath(blinky.CurrentPath, (255,0,0), screen)
+    
     drawHud(gameStateService,screen, pacManImage, font)    
       
     #check for game win

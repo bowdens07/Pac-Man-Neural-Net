@@ -1,3 +1,4 @@
+import copy
 from direction import Directions
 
 
@@ -7,11 +8,13 @@ class PathingNode:
         self.row = position[0]
         self.col = position[1]
         self.position: tuple[int,int] = position #redudnant, but easier for reasoning
-        self.neighborsPacMan = (False,Directions.RIGHT) #if it neighbors pac man and if so what direction
-    def resetPacManNeighbor(self):
-        self.neighborsPacMan = (False,Directions.RIGHT)
-    def setNeighborsPacMan(self, direction:Directions):
-        self.neighborsPacMan = (True, direction)
+        self.neighborsTarget = (False,Directions.RIGHT) #if it neighbors pac man and if so what direction
+    
+    def resetTargetNeighbor(self):
+        self.neighborsTarget = (False,Directions.RIGHT)
+
+    def setNeighborsTarget(self, direction:Directions):
+        self.neighborsTarget = (True, direction)
 
     def getDistanceFromPosition(self,targetPosition:tuple[int,int]):
         verticalDistance = abs(self.position[0] - targetPosition[0])
@@ -108,11 +111,11 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
                 counter += 1
                 searchPosition = PathingNodes.__getSearchPosition(node.position,searchDirection,counter)
 
-    def resetPacManNeighbors(self):
+    def resetTargetNeighbors(self):
         for node in self.nodeDict.values():
-            node.resetPacManNeighbor()
+            node.resetTargetNeighbor()
 
-    #For getting the current nodes neighboring pac-Man - if pac-Man is on a node, only return that node
+    #For getting the current nodes neighboring Target - if Target is on a node, only return that node
     #Given a row and column, get a list of neighboring nodes including the direction that node is to the given position
     #TODO: does not handle wrapping case
     def getNeighboringNodes(self,tilePosition:tuple[int,int], board:list[list[int]]) -> list[tuple[PathingNode, Directions]]:
@@ -143,8 +146,14 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
         return foundNeighbors
     
 
-    def addPacManNeighbors(self,pacManPosition:tuple[int,int], board:list[list[int]]):
-        pacManNeighbors = self.getNeighboringNodes(pacManPosition,board)
-        for neighbor in pacManNeighbors:
-            neighbor[0].setNeighborsPacMan(neighbor[1])
+    def addTargetNeighbors(self,targetPosition:tuple[int,int], board:list[list[int]]):
+        targetNeighbors = self.getNeighboringNodes(targetPosition,board)
+        for neighbor in targetNeighbors:
+            neighbor[0].setNeighborsTarget(neighbor[1])
+    
+    #Returns deep copy of pathingNodes that has the designated target
+    def getCopyWithTarget(self, targetPosition:tuple[int,int], board:list[list[int]]):
+        pathingNodesCopy = copy.deepcopy(self)
+        pathingNodesCopy.addTargetNeighbors(targetPosition,board)
+        return pathingNodesCopy
             

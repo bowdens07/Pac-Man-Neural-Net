@@ -13,37 +13,6 @@ class Blinky(Ghost):
         return pg.transform.scale(pg.image.load(f'assets/Blinky.png'),(45,45))
 
     def moveGhost(self, target: tuple[int,int], pathingNodes: PathingNodes):
-        (hasGeneratedNewPath, path) = self.getAStarTarget(target,pathingNodes)
+        self.moveToAStarTarget(target, pathingNodes)
 
-        if len(path) > 0:
-            #Get the direction the ghost wants to go
-            SourceNode = path[0]
-            if hasGeneratedNewPath:
-                if SourceNode.neighborsPacMan[0]: #If The Source node neighbors pac man, just go towards Pac-Man
-                    self.dirRequest = SourceNode.neighborsPacMan[1]
-                else:
-                    self.dirRequest = SourceNode.getDirectionToNeighbor(path[1])
-            #Get the directions the ghost can go
-            (validDirections, isInBox) = self.checkCollision()
-            #The enum Directions corresponds to the list of bools
-            if validDirections[self.dirRequest.value]:
-                self.direction= self.dirRequest
-        else:
-            print("Warning: Blinky doesn't have a path")
 
-        self.__moveGhostforward(validDirections)
-        #Wrap the ghosts through the tunnel
-        if self.xPos < -30:
-            self.xPos = 900
-        elif self.xPos > 900:
-            self.xPos = -30
-
-    def __moveGhostforward(self, validDirections:list[bool]):
-        if self.direction == Directions.RIGHT and validDirections[Directions.RIGHT.value]:
-            self.xPos += self.speed
-        elif self.direction == Directions.LEFT and validDirections[Directions.LEFT.value]:
-            self.xPos -= self.speed
-        elif self.direction == Directions.UP and validDirections[Directions.UP.value]:
-            self.yPos -= self.speed
-        elif self.direction == Directions.DOWN and validDirections[Directions.DOWN.value]:
-            self.yPos += self.speed
