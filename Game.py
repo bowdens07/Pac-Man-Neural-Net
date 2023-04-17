@@ -49,6 +49,8 @@ runGame = True
 def resetPositions():
     gameStateService.powerPellet = False
     gameStateService.powerCounter = False
+    gameStateService.scatterCounter = 0
+    gameStateService.isScatterMode = True
     pacMan.xPos = 450
     pacMan.yPos = 663
     pacMan.direction = Directions.RIGHT
@@ -129,6 +131,24 @@ while runGame:
     else:
         gameStateService.counter = 0
         flicker = True
+
+    #manage scatter mode
+    if gameStateService.isScatterMode:
+        if gameStateService.scatterCounter < 420:
+            gameStateService.scatterCounter +=1
+        elif gameStateService.scatterCounter >= 420:
+            gameStateService.scatterCounter = 0
+            gameStateService.isScatterMode = False
+            print("Scatter mode over")
+    else:
+        if gameStateService.attackCounter < 1200:
+            gameStateService.attackCounter += 1
+        elif gameStateService.attackCounter >= 1200:
+            gameStateService.isScatterMode = True
+            gameStateService.attackCounter = 0
+            print("Scatter mode beginning")
+        
+
     #manage powerPellets
     if gameStateService.powerPellet and gameStateService.powerCounter < 6000:
         gameStateService.powerCounter += 1

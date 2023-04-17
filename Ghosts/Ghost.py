@@ -35,6 +35,10 @@ class Ghost:
     def _getGhostImage(ABC) -> pg.Surface:
         pass
 
+    @abstractmethod
+    def _getScatterTarget(ABC) -> tuple[int,int]:
+        pass
+
     def getCenterX(ABC):
         return ABC.xPos + 22
     def getCenterY(ABC):
