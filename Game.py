@@ -35,9 +35,9 @@ pacMan = PacMan(gameStateService, screen, board, 450,663)
 
 #Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
 blinky = Blinky(gameStateService, screen, board, 53,48)
-inky = Inky(gameStateService, screen, board, 440,388)
-pinky = Pinky(gameStateService, screen, board, 53,48)
-sue = Sue(gameStateService, screen, board, 440,438)
+inky = Inky(gameStateService, screen, board, 413,440)
+pinky = Pinky(gameStateService, screen, board, 413,440)
+sue = Sue(gameStateService, screen, board, 413,440)
 ghosts: list[Ghost] = [pinky]#[blinky,inky,pinky,sue]
 
 
