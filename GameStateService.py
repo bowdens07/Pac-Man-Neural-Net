@@ -14,5 +14,5 @@ class GameStateService:
         return 345 < xPosition < 565 and 380 < yPosition < 490
     
     def isInReviveZone(self, xPosition:int, yPosition:int) -> bool:
-        return 350 < xPosition < 550 and 450 < yPosition < 480
+        return 350 <= xPosition < 550 and 440 <= yPosition < 480
     

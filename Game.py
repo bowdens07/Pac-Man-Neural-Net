@@ -130,10 +130,10 @@ while runGame:
         gameStateService.counter = 0
         flicker = True
     #manage powerPellets
-    if gameStateService.powerPellet and gameStateService.powerCounter < 600:
+    if gameStateService.powerPellet and gameStateService.powerCounter < 6000:
         gameStateService.powerCounter += 1
         print(gameStateService.powerCounter)
-    elif gameStateService.powerPellet and gameStateService.powerCounter >= 600:
+    elif gameStateService.powerPellet and gameStateService.powerCounter >= 6000:
         gameStateService.powerCounter = 0
         gameStateService.powerPellet = False
         print("PowerPellet Expired")
@@ -154,9 +154,9 @@ while runGame:
     
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
-        blinky.moveGhost(pacMan.getTilePosition(),pathingNodes.getCopyWithTarget(pacMan.getFourTilesAhead(),board))
+        #blinky.moveGhost(pacMan.getTilePosition(),pathingNodes)
         #inky.moveSue()
-        pinky.moveGhost(pacMan.getFourTilesAhead(),pathingNodes.getCopyWithTarget(pacMan.getFourTilesAhead(),board))
+        pinky.moveGhost(pacMan.getFourTilesAhead(),pathingNodes, board)
         #sue.moveSue()
 
     #pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
@@ -176,10 +176,6 @@ while runGame:
     for g in ghosts:
         g.draw()
         g.checkCollision()
-        g.setNewTarget(pacMan.xPos,pacMan.yPos)
-
-    pg.draw.circle(screen,(255,0,255), convertPositionToScreenCords((2,2)),10)       
-
 
     #If blinky is on a pathing node, draw a green rectangle on him: for debugging
     #if blinky.isOnPathingNode(pathingNodes):

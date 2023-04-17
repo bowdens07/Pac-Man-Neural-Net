@@ -38,8 +38,9 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
         2: [2,7,13,16,22,27],
         6: [2,7,10,13,16,19,22,27],
         9: [2,7,10,13,16,19,22,27],
-        12: [10,13,16,19],
+        12: [10,13,14,16,19],
         15: [7,10,19,22],
+        16: [12,14],
         18: [10,19],
         21: [2,7,10,13,16,19,22,27],
         24:[2,4,7,10,13,16,19,22,25,27],
@@ -82,30 +83,21 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
         if curSearchDirection == [-1,0]:
             possibleSearchDirections.remove([1,0])
         return possibleSearchDirections
-    
-    def __reverseDirection(direction):
-        if direction == Directions.RIGHT:
-            return Directions.LEFT
-        if direction == Directions.LEFT:
-            return Directions.RIGHT
-        if direction == Directions.UP:
-            return Directions.DOWN
-        if direction == Directions.DOWN:
-            return Directions.UP
+
         
     def __findNeighbors(self, node:PathingNode,board:list[list[int]], searchDirections:list[list[int]]): #DFS search for neighbors in every cardinal direction, stops if hits a wall
         searchDirections = [[1,0],[-1,0],[0,1],[0,-1]] #right, left, up down
         for searchDirection in searchDirections:
             counter = 1
             searchPosition = PathingNodes.__getSearchPosition(node.position,searchDirection,counter)
-            while searchPosition[0] < 33 and searchPosition[1] < 30 and board[searchPosition[0]][searchPosition[1]] < 3:
+            while searchPosition[0] < 33 and searchPosition[1] < 30 and (board[searchPosition[0]][searchPosition[1]] < 3 or board[searchPosition[0]][searchPosition[1]] == 9): #9 is a gate
                 if searchPosition in self.nodeDict.keys():
                     neighbor = self.nodeDict[searchPosition]
                     knownNeighbor = [existingNeighbor for existingNeighbor in node.neighbors if existingNeighbor[0] == neighbor]
                     if len(knownNeighbor) == 0:
                         directionToNeighbor = PathingNodes.__interpretDirection(searchDirection)
                         node.neighbors.append((neighbor, directionToNeighbor))
-                        neighbor.neighbors.append((node, PathingNodes.__reverseDirection(directionToNeighbor)))
+                        neighbor.neighbors.append((node, Directions.reverseDirection(directionToNeighbor)))
                         self.__findNeighbors(neighbor,board, PathingNodes.__getPossibleSearchDirections(searchDirection))
                     break
                 counter += 1
@@ -131,7 +123,7 @@ class PathingNodes: #uses the board to connect every pathing node to its neighbo
             while searchPosition[0] < 33 and searchPosition[1] < 30 and board[searchPosition[0]][searchPosition[1]] < 3:
                 if searchPosition in self.nodeDict.keys():
                     neighbor = self.nodeDict[searchPosition] # a neighbor was found
-                    direction = PathingNodes.__reverseDirection(PathingNodes.__interpretDirection(searchDirection)) #get the direction to the source from neighbor's perspective
+                    direction = Directions.reverseDirection(PathingNodes.__interpretDirection(searchDirection)) #get the direction to the source from neighbor's perspective
                     foundNeighbors.append((neighbor,direction))
                     break
                 counter += 1

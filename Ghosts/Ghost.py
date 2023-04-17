@@ -7,6 +7,7 @@ from direction import Directions
 from graphics import convertPositionToScreenCords, getTileHeight, getTileWidth
 from utilities.PathingNode import PathingNode, PathingNodes
 from utilities.PriorityQueue import PriorityQueue
+import random
 
 class Ghost:
     def __init__(ABC, gameStateService: GameStateService, screen: pg.Surface, board:list[list[int]], xPos:int, yPos:int):
@@ -54,7 +55,7 @@ class Ghost:
 
     def updateSpeed(ABC):
         if ABC.isDead:
-            ABC.speed = 4
+            ABC.speed = 3
         elif ABC.gameStateService.powerPellet and not ABC.isEaten:
             ABC.speed = 1
         else:
@@ -89,12 +90,19 @@ class Ghost:
 
     #This method relies on PacMan being inside the PathingNodes Neighbors, if not, we'll search the whole space and probably crash
     #Will only assign a target if Ghost is on a PathingNode and it doesn't have a path or it's on a new pathing node
+    #Make sure to pass a deep copy of pathingNodes, this algorithm will edit the neighbors of the nodes
     def getAStarTarget(ABC, pacManPosition:tuple[int,int], pathingNodes:PathingNodes) -> tuple[bool, list[PathingNode]]:
         hasGeneratedNewPath = False
         if ABC.isOnPathingNode(pathingNodes) and ABC.isOnCenterOfTile() and (len(ABC.CurrentPath) == 0 or ABC.CurrentPath[0].position != ABC.getCurrentTile()):
             ABC.snapToCenterOfTile(ABC.getCurrentTile())
             frontier = PriorityQueue()
             start = pathingNodes.nodeDict[ABC.getCurrentTile()]
+
+            for neighbor in start.neighbors: #Do not allow the ghost to 180, remove the connection to any neighbor that causes it, unless it's trying to leave the box
+                if(not ABC.isLeavingBox):
+                    if Directions.reverseDirection(ABC.direction) == neighbor[1]:
+                        start.neighbors.remove(neighbor)
+
             frontier.put(start,0)
             came_from: dict[PathingNode,PathingNode] = {}
             cost_to_reach: dict[PathingNode,int] = {}
@@ -129,23 +137,52 @@ class Ghost:
         else:
             return (hasGeneratedNewPath,ABC.CurrentPath)
 
-    def moveToAStarTarget(ABC, target: tuple[int,int], pathingNodes: PathingNodes):
-        (hasGeneratedNewPath, path) = ABC.getAStarTarget(target,pathingNodes)
+    def flee(ABC, pathingNodes:PathingNodes):
+            hasGeneratedNewPath = False
+            if ABC.isOnPathingNode(pathingNodes) and ABC.isOnCenterOfTile()and (len(ABC.CurrentPath) == 0 or ABC.CurrentPath[0].position != ABC.getCurrentTile()):
+                ABC.snapToCenterOfTile(ABC.getCurrentTile())
+                start = pathingNodes.nodeDict[ABC.getCurrentTile()]
+                neighbors = start.neighbors
+                for neighbor in neighbors:
+                    if(not ABC.isLeavingBox):
+                        if neighbor[1] == Directions.reverseDirection(ABC.direction): #prevent ghosts from doing a 180
+                            neighbors.remove(neighbor)
+                target = neighbors[random.randrange(len(neighbors))][0] #pick a random neighbor that isn't a 180
+                path = [start, target]
+                ABC.CurrentPath = path
+                hasGeneratedNewPath = True
+            return (hasGeneratedNewPath,ABC.CurrentPath)
+
+    def moveToAStarTarget(ABC, target: tuple[int,int], pathingNodes: PathingNodes, fleeing:bool):
+        (validDirections, isInBox) = ABC.checkCollision()
+        if not any(validDirections): #The ghost is probably stuck from going too fast - Just snap it to the current tile and check collisions again
+            (validDirections, isInBox) = ABC.snapToCenterOfTile(ABC.getCurrentTile())
+
+        if(fleeing):
+            (hasGeneratedNewPath, path) = ABC.flee(pathingNodes)
+        else:
+            (hasGeneratedNewPath, path) = ABC.getAStarTarget(target,pathingNodes)
         if len(path) > 0:
             #Get the direction the ghost wants to go
             SourceNode = path[0]
             if hasGeneratedNewPath:
-                if SourceNode.neighborsTarget[0]: #If The Source node neighbors pac man, just go towards Pac-Man
-                    ABC.dirRequest = SourceNode.neighborsTarget[1]
+                if SourceNode.neighborsTarget[0]: #If The Source node neighbors pac man, just go towards Pac-Man, unless this causes a direction reversal
+                    if(Directions.reverseDirection(ABC.direction) != SourceNode.neighborsTarget[1]): #Does not cause a direction reversal
+                        ABC.dirRequest = SourceNode.neighborsTarget[1]
+                    else: #Would cause a direction reversal, pick a random available direction that isn't reversing
+                        SourceNodeNeighbors = SourceNode.neighbors
+                        for neighbor in SourceNodeNeighbors:
+                            if neighbor[1] == Directions.reverseDirection(ABC.direction): #prevent ghosts from doing a 180
+                                SourceNodeNeighbors.remove(neighbor)
+                        ABC.dirRequest = SourceNodeNeighbors[random.randrange(len(SourceNodeNeighbors))][1] #pick a random neighbor that isn't a 180                        
                 else:
                     ABC.dirRequest = SourceNode.getDirectionToNeighbor(path[1])
             #Get the directions the ghost can go
-            (validDirections, isInBox) = ABC.checkCollision()
             #The enum Directions corresponds to the list of bools
             if validDirections[ABC.dirRequest.value]:
                 ABC.direction= ABC.dirRequest
         else:
-            print("Warning: Blinky doesn't have a path")
+            print("Warning: Ghost doesn't have a path")
 
         ABC.__moveGhostforward(validDirections)
         #Wrap the ghosts through the tunnel
@@ -153,6 +190,12 @@ class Ghost:
             ABC.xPos = 900
         elif ABC.xPos > 900:
             ABC.xPos = -30
+
+    def turnGhostAround(ABC): #180 the ghost and set their path to nothing, used to start fleeing
+        ABC.direction = Directions.reverseDirection(ABC.direction)
+        ABC.dirRequest = ABC.direction
+        ABC.CurrentPath = []
+
 
     def __moveGhostforward(ABC, validDirections:list[bool]):
         if ABC.direction == Directions.RIGHT and validDirections[Directions.RIGHT.value]:
@@ -168,6 +211,15 @@ class Ghost:
     def __distanceToTargetHeuristic(position1:tuple[int,int],position2:tuple[int,int]):
         ##TODO: more expensive than manhattan distance, and I think it would work
         return math.sqrt(((position1[0] - position2[0]) **2) + ((position1[1] - position2[1]) ** 2))
+
+
+    @abstractmethod
+    def moveGhost(ABC, target: tuple[int,int], pathingNodes: PathingNodes, board: list[list[int]]):
+        pass 
+    
+    @abstractmethod
+    def _getRunAwayTarget(ABC):
+        pass
 
     def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up 
         ABC.isInBox = False
@@ -242,181 +294,3 @@ class Ghost:
         else:
             ABC.isInBox = False
         return ABC.turns, ABC.isInBox
-
-    @abstractmethod
-    def moveGhost(ABC):
-        pass
-
-    def moveSue(ABC): #TODO bugged - if the ghosts move off screen they get stuck
-        if ABC.direction == 0:
-            if ABC.target[0] > ABC.xPos and ABC.turns[0]:
-                ABC.xPos += ABC.speed
-            elif not ABC.turns[0]:
-                if ABC.target[1] > ABC.yPos and ABC.turns[3]:
-                    ABC.direction = 3
-                    ABC.yPos += ABC.speed
-                elif ABC.target[1] < ABC.yPos and ABC.turns[2]:
-                    ABC.direction = 2
-                    ABC.yPos -= ABC.speed
-                elif ABC.target[0] < ABC.xPos and ABC.turns[1]:
-                    ABC.direction = 1
-                    ABC.xPos -= ABC.speed
-                elif ABC.turns[3]:
-                    ABC.direction = 3
-                    ABC.yPos += ABC.speed
-                elif ABC.turns[2]:
-                    ABC.direction = 2
-                    ABC.yPos -= ABC.speed
-                elif ABC.turns[1]:
-                    ABC.direction = 1
-                    ABC.xPos -= ABC.speed
-            elif ABC.turns[0]:
-                if ABC.target[1] > ABC.yPos and ABC.turns[3]:
-                    ABC.direction = 3
-                    ABC.yPos += ABC.speed
-                if ABC.target[1] < ABC.yPos and ABC.turns[2]:
-                    ABC.direction = 2
-                    ABC.yPos -= ABC.speed
-                else:
-                    ABC.xPos += ABC.speed
-        elif ABC.direction == 1:
-            if ABC.target[1] > ABC.yPos and ABC.turns[3]:
-                ABC.direction = 3
-            elif ABC.target[0] < ABC.xPos and ABC.turns[1]:
-                ABC.xPos -= ABC.speed
-            elif not ABC.turns[1]:
-                if ABC.target[1] > ABC.yPos and ABC.turns[3]:
-                    ABC.direction = 3
-                    ABC.yPos += ABC.speed
-                elif ABC.target[1] < ABC.yPos and ABC.turns[2]:
-                    ABC.direction = 2
-                    ABC.yPos -= ABC.speed
-                elif ABC.target[0] > ABC.xPos and ABC.turns[0]:
-                    ABC.direction = 0
-                    ABC.xPos += ABC.speed
-                elif ABC.turns[3]:
-                    ABC.direction = 3
-                    ABC.yPos += ABC.speed
-                elif ABC.turns[2]:
-                    ABC.direction = 2
-                    ABC.yPos -= ABC.speed
-                elif ABC.turns[0]:
-                    ABC.direction = 0
-                    ABC.xPos += ABC.speed
-            elif ABC.turns[1]:
-                if ABC.target[1] > ABC.yPos and ABC.turns[3]:
-                    ABC.direction = 3
-                    ABC.yPos += ABC.speed
-                if ABC.target[1] < ABC.yPos and ABC.turns[2]:
-                    ABC.direction = 2
-                    ABC.yPos -= ABC.speed
-                else:
-                    ABC.xPos -= ABC.speed
-        elif ABC.direction == 2:
-            if ABC.target[0] < ABC.xPos and ABC.turns[1]:
-                ABC.direction = 1
-                ABC.xPos -= ABC.speed
-            elif ABC.target[1] < ABC.yPos and ABC.turns[2]:
-                ABC.direction = 2
-                ABC.yPos -= ABC.speed
-            elif not ABC.turns[2]:
-                if ABC.target[0] > ABC.xPos and ABC.turns[0]:
-                    ABC.direction = 0
-                    ABC.xPos += ABC.speed
-                elif ABC.target[0] < ABC.xPos and ABC.turns[1]:
-                    ABC.direction = 1
-                    ABC.xPos -= ABC.speed
-                elif ABC.target[1] > ABC.yPos and ABC.turns[3]:
-                    ABC.direction = 3
-                    ABC.yPos += ABC.speed
-                elif ABC.turns[1]:
-                    ABC.direction = 1
-                    ABC.xPos -= ABC.speed
-                elif ABC.turns[3]:
-                    ABC.direction = 3
-                    ABC.yPos += ABC.speed
-                elif ABC.turns[0]:
-                    ABC.direction = 0
-                    ABC.xPos += ABC.speed
-            elif ABC.turns[2]:
-                if ABC.target[0] > ABC.xPos and ABC.turns[0]:
-                    ABC.direction = 0
-                    ABC.xPos += ABC.speed
-                elif ABC.target[0] < ABC.xPos and ABC.turns[1]:
-                    ABC.direction = 1
-                    ABC.xPos -= ABC.speed
-                else:
-                    ABC.yPos -= ABC.speed
-        elif ABC.direction == 3:
-            if ABC.target[1] > ABC.yPos and ABC.turns[3]:
-                ABC.yPos += ABC.speed
-            elif not ABC.turns[3]:
-                if ABC.target[0] > ABC.xPos and ABC.turns[0]:
-                    ABC.direction = 0
-                    ABC.xPos += ABC.speed
-                elif ABC.target[0] < ABC.xPos and ABC.turns[1]:
-                    ABC.direction = 1
-                    ABC.xPos -= ABC.speed
-                elif ABC.target[1] < ABC.yPos and ABC.turns[2]:
-                    ABC.direction = 2
-                    ABC.yPos -= ABC.speed
-                elif ABC.turns[2]:
-                    ABC.direction = 2
-                    ABC.yPos -= ABC.speed
-                elif ABC.turns[1]:
-                    ABC.direction = 1
-                    ABC.xPos -= ABC.speed
-                elif ABC.turns[0]:
-                    ABC.direction = 0
-                    ABC.xPos += ABC.speed
-            elif ABC.turns[3]:
-                if ABC.target[0] > ABC.xPos and ABC.turns[0]:
-                    ABC.direction = 0
-                    ABC.xPos += ABC.speed
-                elif ABC.target[0] < ABC.xPos and ABC.turns[1]:
-                    ABC.direction = 1
-                    ABC.xPos -= ABC.speed
-                else:
-                    ABC.yPos += ABC.speed
-        if ABC.xPos < -30:
-            ABC.xPos = 900
-        elif ABC.xPos > 900:
-            ABC.xPos - 30
-        return ABC.xPos, ABC.yPos, ABC.direction    
-    
-    def _getOppositeSideTarget(ABC, pacMan_x,pacMan_y):
-        if pacMan_x < 450: #basically move to the opposite side of the board pac-man is on if powerup
-            runawayX = 900
-        else:
-            runawayX = 0
-        if pacMan_y < 450:
-            runawayY = 900
-        else:
-            runawayY = 0
-        return (runawayX, runawayY)
-
-    @abstractmethod
-    def getRunAwayTarget(ABC, pacMan_x,pacMan_y):
-        pass
-
-    def setNewTarget(ABC,pacMan_x,pacMan_y):
-        if ABC.isDead: #if dead, go to box
-            ghostTarget = (380, 450) #inside the revive zone
-        elif ABC.isLeavingBox:
-                if not ABC.gameStateService.isInTheBox(ABC.getCenterX(), ABC.getCenterY()):
-                    ABC.isLeavingBox = False
-                    ghostTarget = (pacMan_x, pacMan_y)
-                else:
-                    ghostTarget = (400,100)
-        elif ABC.gameStateService.isInReviveZone(ABC.getCenterX(), ABC.getCenterY()): #if not dead leave box
-                ABC.isLeavingBox = True
-                ghostTarget = (400,100)
-                print("InBox, trying to leave")
-        elif ABC.gameStateService.powerPellet: 
-            if not ABC.isEaten: #If not eaten run
-                ghostTarget = ABC.getRunAwayTarget(pacMan_x,pacMan_y)
-            else: #If eaten and not dead, and not in box, must have respawend, resume chasing
-                ghostTarget = (pacMan_x, pacMan_y)     
-        else: #Not dead, not in box, now power pellet
-            ghostTarget = (pacMan_x, pacMan_y)
-        ABC.target = ghostTarget

@@ -89,7 +89,6 @@ class PacMan:
             self.screen.blit(pg.transform.rotate(self.pacManImages[gameStateService.counter // 9],-90), (self.xPos,self.yPos)) 
     
 
-    #ghosts doesn't have to be returned as a shallow copy will do, but I will for now
     def checkCollisions(self,curScore, power, powerCount, ghosts: list[Ghost]):
         tilePosition = self.getTilePosition()
         if tilePosition[0] < 32 and tilePosition[1] < 30:
@@ -104,8 +103,9 @@ class PacMan:
                     power = True
                     print("Power pellet Eaten")
                     powerCount = 0
-                    for g in ghosts: #maybe not pac man's job to toggle the ghosts, just report if it ate a power pellet
+                    for g in ghosts: 
                         g.isEaten = False
+                        g.turnGhostAround()
         return curScore, power, powerCount 
 
     ## More likely I want to make a velocity system -> see if position + velocity is valid, then decide to move or not.
