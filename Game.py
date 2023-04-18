@@ -35,10 +35,10 @@ pacMan = PacMan(gameStateService, screen, board, 450,663)
 
 #Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
 blinky = Blinky(gameStateService, screen, board, 53,48)
-inky = Inky(gameStateService, screen, board, 413,440)
+inky = Inky(gameStateService, screen, board, 413,440, blinky)
 pinky = Pinky(gameStateService, screen, board, 413,440)
 sue = Sue(gameStateService, screen, board, 413,440)
-ghosts: list[Ghost] = [sue]#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = [blinky, inky]#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -141,7 +141,7 @@ while runGame:
             gameStateService.isScatterMode = False
             print("Scatter mode over")
     else:
-        if gameStateService.attackCounter < 1200:
+        if gameStateService.attackCounter < 12000:
             gameStateService.attackCounter += 1
         elif gameStateService.attackCounter >= 1200:
             gameStateService.isScatterMode = True
@@ -150,10 +150,10 @@ while runGame:
         
 
     #manage powerPellets
-    if gameStateService.powerPellet and gameStateService.powerCounter < 6000:
+    if gameStateService.powerPellet and gameStateService.powerCounter < 600:
         gameStateService.powerCounter += 1
         print(gameStateService.powerCounter)
-    elif gameStateService.powerPellet and gameStateService.powerCounter >= 6000:
+    elif gameStateService.powerPellet and gameStateService.powerCounter >= 600:
         gameStateService.powerCounter = 0
         gameStateService.powerPellet = False
         print("PowerPellet Expired")
@@ -174,8 +174,9 @@ while runGame:
     
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
-        for g in ghosts:
-            g.moveGhost(pacMan, pathingNodes, board)
+        inky.moveGhost(pacMan,pathingNodes,board)
+       #for g in ghosts:
+       #    g.moveGhost(pacMan, pathingNodes, board)
 
     #pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
     #neighborstr = ""
@@ -218,6 +219,7 @@ while runGame:
     drawPath(pinky.CurrentPath, (255,192,203), screen)
     drawPath(blinky.CurrentPath, (255,0,0), screen)
     drawPath(sue.CurrentPath, (255,140,0), screen)
+    drawPath(inky.CurrentPath, (0, 255, 255), screen)
 
     
     drawHud(gameStateService,screen, pacManImage, font)    

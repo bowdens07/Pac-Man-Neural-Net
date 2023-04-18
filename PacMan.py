@@ -51,22 +51,22 @@ class PacMan:
         return (row,col)
     
     #Gets four tiles ahead of pac-Man's current direction. If a wall is four tiles out, gets the next nearest position, stopping on pacMan - used for Pinky chasing
-    def getFourTilesAhead(self) -> tuple[int,int]:
+    def getXTilesAhead(self, tilesAhead:int) -> tuple[int,int]:
         (pacManRow, pacManColumn) = self.getCurrentTile()
         if self.direction == Directions.RIGHT:
-            pacManColumn += 4
+            pacManColumn += tilesAhead
             while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
                 pacManColumn -= 1
         if self.direction == Directions.LEFT:
-            pacManColumn -= 4
+            pacManColumn -= tilesAhead
             while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
                 pacManColumn += 1
         if self.direction == Directions.UP:
-            pacManRow -= 4
+            pacManRow -= tilesAhead
             while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
                 pacManRow += 1
         if self.direction == Directions.DOWN:
-            pacManRow += 4
+            pacManRow += tilesAhead
             while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
                 pacManRow -= 1
 

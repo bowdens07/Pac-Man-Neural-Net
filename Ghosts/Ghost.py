@@ -175,7 +175,12 @@ class Ghost:
             if hasGeneratedNewPath:
                 if SourceNode.neighborsTarget[0]: #If The Source node neighbors pac man, just go towards Pac-Man, unless this causes a direction reversal
                     if(Directions.reverseDirection(ABC.direction) != SourceNode.neighborsTarget[1]): #Does not cause a direction reversal
-                        ABC.dirRequest = SourceNode.neighborsTarget[1]
+                        if(validDirections[SourceNode.neighborsTarget[1].value]):
+                            ABC.dirRequest = SourceNode.neighborsTarget[1]
+                        else: #If the ghost is on its target node just go the first valid direction that isn't a turn around
+                            for i in range(len(validDirections)): #todo, get rid of the array of bools
+                                if validDirections[i] and Directions(i) != Directions.reverseDirection(ABC.direction):
+                                    ABC.dirRequest = Directions(i)
                     else: #Would cause a direction reversal, pick a random available direction that isn't reversing
                         SourceNodeNeighbors = SourceNode.neighbors
                         for neighbor in SourceNodeNeighbors:

@@ -13,4 +13,4 @@ class Pinky(Ghost):
         return (2,3)
 
     def moveGhost(self, pacMan: PacMan, pathingNodes: PathingNodes, board: list[list[int]]):
-        self.moveGhostToTarget(pacMan.getFourTilesAhead(), pathingNodes, board)
+        self.moveGhostToTarget(pacMan.getXTilesAhead(4), pathingNodes, board)
