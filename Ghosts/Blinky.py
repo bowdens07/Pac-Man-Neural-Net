@@ -14,6 +14,6 @@ class Blinky(Ghost):
         return (2,25)
 
     def moveGhost(self, pacMan: PacMan, pathingNodes: PathingNodes, board: list[list[int]]):
-        self.moveGhostToTarget(pacMan.getTilePosition(), pathingNodes, board)
+        self.moveGhostToTarget(pacMan.getCurrentTile(), pathingNodes, board)
 
 

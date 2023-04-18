@@ -43,7 +43,7 @@ class PacMan:
             return True
         return False
 
-    def getTilePosition(self) -> tuple[int,int]:
+    def getCurrentTile(self) -> tuple[int,int]:
         tileHeight = (self.screen.get_height() - 50) // 32
         tileWidth = self.screen.get_width() // 30
         col = self.getCenterX() // tileWidth
@@ -52,7 +52,7 @@ class PacMan:
     
     #Gets four tiles ahead of pac-Man's current direction. If a wall is four tiles out, gets the next nearest position, stopping on pacMan - used for Pinky chasing
     def getFourTilesAhead(self) -> tuple[int,int]:
-        (pacManRow, pacManColumn) = self.getTilePosition()
+        (pacManRow, pacManColumn) = self.getCurrentTile()
         if self.direction == Directions.RIGHT:
             pacManColumn += 4
             while(not isValidPosition((pacManRow,pacManColumn)) or isAWall(((pacManRow,pacManColumn)))):
@@ -71,7 +71,7 @@ class PacMan:
                 pacManRow -= 1
 
         if(isInBox((pacManRow, pacManColumn))): #If pac man is aiming into the box, just use Pac Man's position
-            return self.getTilePosition()
+            return self.getCurrentTile()
         
         return (pacManRow,pacManColumn)
            
@@ -89,7 +89,7 @@ class PacMan:
     
 
     def checkCollisions(self,curScore, power, powerCount):
-        tilePosition = self.getTilePosition()
+        tilePosition = self.getCurrentTile()
         if tilePosition[0] < 32 and tilePosition[1] < 30:
             boardContent = self.board[tilePosition[0]][tilePosition[1]]
             if 0 < self.xPos < 870:

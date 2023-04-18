@@ -38,7 +38,7 @@ blinky = Blinky(gameStateService, screen, board, 53,48)
 inky = Inky(gameStateService, screen, board, 413,440)
 pinky = Pinky(gameStateService, screen, board, 413,440)
 sue = Sue(gameStateService, screen, board, 413,440)
-ghosts: list[Ghost] = [blinky, pinky]#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = [sue]#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -217,6 +217,8 @@ while runGame:
 
     drawPath(pinky.CurrentPath, (255,192,203), screen)
     drawPath(blinky.CurrentPath, (255,0,0), screen)
+    drawPath(sue.CurrentPath, (255,140,0), screen)
+
     
     drawHud(gameStateService,screen, pacManImage, font)    
       

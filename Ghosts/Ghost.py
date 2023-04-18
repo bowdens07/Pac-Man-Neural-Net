@@ -35,6 +35,7 @@ class Ghost:
     def _getGhostImage(ABC) -> pg.Surface:
         pass
 
+    #Scatter target must be a position with a pathingNode on it
     @abstractmethod
     def _getScatterTarget(ABC) -> tuple[int,int]:
         pass
