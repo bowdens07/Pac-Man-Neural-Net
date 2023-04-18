@@ -39,6 +39,10 @@ class Ghost:
     def _getScatterTarget(ABC) -> tuple[int,int]:
         pass
 
+    @abstractmethod
+    def moveGhost(ABC, pacManPosition: tuple[int,int], pathingNodes: PathingNodes, board: list[list[int]]):
+        pass
+
     def getCenterX(ABC):
         return ABC.xPos + 22
     def getCenterY(ABC):
@@ -75,7 +79,6 @@ class Ghost:
         (tileX, tileY) = convertPositionToScreenCords(currentTile)
         return abs(tileX - ABC.getCenterX()) < 2 and abs(tileY - ABC.getCenterY()) < 2
 
-
     def isOnPathingNode(ABC, pathingNodes: PathingNodes):
         currentTile = ABC.getCurrentTile()
         if currentTile in pathingNodes.nodeDict.keys():
@@ -83,7 +86,6 @@ class Ghost:
             return True
         return False
     
-
     def getHeuristicPlusPathCost(pathingNode:PathingNode, costSoFar:int,pacManPosiiton:tuple[int,int]) -> int:
         return costSoFar + pathingNode.getDistanceFromPosition(pacManPosiiton)
 
@@ -123,7 +125,7 @@ class Ghost:
                     newCost = cost_to_reach[currentNode] + neighbor[0].getDistanceFromPosition(currentNode.position)
                     if neighbor[0] not in cost_to_reach.keys() or newCost < cost_to_reach[neighbor[0]]:
                         cost_to_reach[neighbor[0]] = newCost
-                        priority = newCost + Ghost.__distanceToTargetHeuristic(neighbor[0].position, pacManPosition)
+                        priority = newCost + Ghost._distanceToTargetHeuristic(neighbor[0].position, pacManPosition)
                         frontier.put(neighbor[0],priority)
                         came_from[neighbor[0]] = currentNode
 
@@ -200,7 +202,6 @@ class Ghost:
         ABC.dirRequest = ABC.direction
         ABC.CurrentPath = []
 
-
     def __moveGhostforward(ABC, validDirections:list[bool]):
         if ABC.direction == Directions.RIGHT and validDirections[Directions.RIGHT.value]:
             ABC.xPos += ABC.speed
@@ -211,19 +212,32 @@ class Ghost:
         elif ABC.direction == Directions.DOWN and validDirections[Directions.DOWN.value]:
             ABC.yPos += ABC.speed
             
-
-    def __distanceToTargetHeuristic(position1:tuple[int,int],position2:tuple[int,int]):
+    def _distanceToTargetHeuristic(position1:tuple[int,int],position2:tuple[int,int]):
         ##TODO: more expensive than manhattan distance, and I think it would work
         return math.sqrt(((position1[0] - position2[0]) **2) + ((position1[1] - position2[1]) ** 2))
 
-
-    @abstractmethod
-    def moveGhost(ABC, target: tuple[int,int], pathingNodes: PathingNodes, board: list[list[int]]):
-        pass 
-    
-    @abstractmethod
-    def _getRunAwayTarget(ABC):
-        pass
+    def moveGhostToTarget(self, target: tuple[int,int], pathingNodes: PathingNodes, board: list[list[int]]):
+            isFleeing = False
+            ghostTarget = target if not self.gameStateService.isScatterMode else self._getScatterTarget()
+            if self.isDead: #if dead, go to box
+                ghostTarget = (16, 12) #The node in the revive zone
+            elif self.isLeavingBox:
+                    if not self.gameStateService.isInTheBox(self.getCenterX(), self.getCenterY()):
+                        self.isLeavingBox = False
+                        ghostTarget = target
+                    else:
+                        ghostTarget = (12,14)
+            elif self.gameStateService.isInReviveZone(self.getCenterX(), self.getCenterY()): #if not dead and in the box start trying to leave box
+                    self.isLeavingBox = True
+                    ghostTarget = (12,14)
+                    print("InBox, trying to leave")
+            elif self.gameStateService.powerPellet: 
+                if not self.isEaten: #If not eaten run
+                    isFleeing = True
+                else: #If eaten and not dead, and not in box, must have respawend, resume chasing - this is only here for clarity
+                    ghostTarget = target
+            pathingNodesWithTarget = pathingNodes.getCopyWithTarget(ghostTarget, board)
+            self.moveToAStarTarget(ghostTarget, pathingNodesWithTarget, isFleeing)
 
     def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up 
         ABC.isInBox = False

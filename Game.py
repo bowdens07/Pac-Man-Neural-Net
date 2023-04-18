@@ -38,7 +38,7 @@ blinky = Blinky(gameStateService, screen, board, 53,48)
 inky = Inky(gameStateService, screen, board, 413,440)
 pinky = Pinky(gameStateService, screen, board, 413,440)
 sue = Sue(gameStateService, screen, board, 413,440)
-ghosts: list[Ghost] = [pinky]#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = [blinky, pinky]#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -62,22 +62,22 @@ def resetPositions():
     blinky.isDead = False
     blinky.isEaten = False
 
-    inky.xPos = 440
-    inky.yPos = 388
+    inky.xPos = 413
+    inky.yPos = 440
     inky.direction = Directions.UP
     inky.isDead = False
     inky.isEaten = False
 
     #pinky.xPos = 440
     #pinky.yPos = 438
-    pinky.xPos = 53
-    pinky.yPos = 48
+    pinky.xPos = 413
+    pinky.yPos = 440
     pinky.direction = Directions.UP
     pinky.isDead = False
     pinky.isEaten = False
 
-    sue.xPos = 440
-    sue.yPos = 438
+    sue.xPos = 413
+    sue.yPos = 440
     sue.direction = Directions.UP
     sue.isDead = False
     sue.isEaten = False
@@ -174,10 +174,8 @@ while runGame:
     
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
-        #blinky.moveGhost(pacMan.getTilePosition(),pathingNodes)
-        #inky.moveSue()
-        pinky.moveGhost(pacMan.getFourTilesAhead(),pathingNodes, board)
-        #sue.moveSue()
+        for g in ghosts:
+            g.moveGhost(pacMan, pathingNodes, board)
 
     #pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
     #neighborstr = ""
@@ -185,7 +183,11 @@ while runGame:
     #    neighborstr += f"{neighbor[0].position},"
     #print(neighborstr)
 
-    gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter, ghosts)
+    gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter = pacMan.checkCollisions(gameStateService.score, gameStateService.powerPellet, gameStateService.powerCounter)
+    if gameStateService.powerCounter == 0 and gameStateService.powerPellet: #If the counter is 0 and we ate a pellet, make ghosts eatable again, and turn them around
+        for g in ghosts: 
+            g.isEaten = False
+            g.turnGhostAround()
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
     drawTileOutlines(screen, board)
     #drawPathingNodes(screen, pathingNodes)

@@ -1,6 +1,5 @@
 import pygame as pg
 from GameStateService import GameStateService
-from Ghosts.Ghost import Ghost
 from board import isAWall, isInBox, isValidPosition
 
 from direction import Directions
@@ -89,7 +88,7 @@ class PacMan:
             self.screen.blit(pg.transform.rotate(self.pacManImages[gameStateService.counter // 9],-90), (self.xPos,self.yPos)) 
     
 
-    def checkCollisions(self,curScore, power, powerCount, ghosts: list[Ghost]):
+    def checkCollisions(self,curScore, power, powerCount):
         tilePosition = self.getTilePosition()
         if tilePosition[0] < 32 and tilePosition[1] < 30:
             boardContent = self.board[tilePosition[0]][tilePosition[1]]
@@ -103,9 +102,6 @@ class PacMan:
                     power = True
                     print("Power pellet Eaten")
                     powerCount = 0
-                    for g in ghosts: 
-                        g.isEaten = False
-                        g.turnGhostAround()
         return curScore, power, powerCount 
 
     ## More likely I want to make a velocity system -> see if position + velocity is valid, then decide to move or not.
