@@ -16,7 +16,6 @@ class Ghost:
         ABC.board = board
         ABC.xPos = xPos
         ABC.yPos = yPos
-        ABC.target = (450,450)
         ABC.speed = 2
         ABC.image = ABC._getGhostImage()
         ABC.direction = Directions.RIGHT
@@ -30,6 +29,7 @@ class Ghost:
         #This is the last pathing node the ghost collided with - we use it to A* only once per node collision
         ABC.lastPathingNodePosition = (0,0)
         ABC.CurrentPath: list[PathingNode] = []
+        ABC.CurrentTarget: tuple[int,int] = None
 
     @abstractmethod
     def _getGhostImage(ABC) -> pg.Surface:
@@ -244,6 +244,7 @@ class Ghost:
                     ghostTarget = target
             pathingNodesWithTarget = pathingNodes.getCopyWithTarget(ghostTarget, board)
             self.moveToAStarTarget(ghostTarget, pathingNodesWithTarget, isFleeing)
+            self.CurrentTarget = ghostTarget
 
     def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up 
         ABC.isInBox = False

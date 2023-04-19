@@ -4,7 +4,7 @@ from Ghosts.Ghost import Ghost
 from PacMan import PacMan
 from direction import Directions
 from board import default_board
-from graphics import convertPositionToScreenCords, draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPath, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
+from graphics import convertPositionToScreenCords, draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPath, drawPathToTarget, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
 from GameStateService import GameStateService
 from Ghosts.Blinky import Blinky
 from Ghosts.Inky import Inky
@@ -38,7 +38,7 @@ blinky = Blinky(gameStateService, screen, board, 53,48)
 inky = Inky(gameStateService, screen, board, 413,440, blinky)
 pinky = Pinky(gameStateService, screen, board, 413,440)
 sue = Sue(gameStateService, screen, board, 413,440)
-ghosts: list[Ghost] = [blinky, inky]#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = [blinky,inky,pinky,sue]#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -141,7 +141,7 @@ while runGame:
             gameStateService.isScatterMode = False
             print("Scatter mode over")
     else:
-        if gameStateService.attackCounter < 12000:
+        if gameStateService.attackCounter < 1200:
             gameStateService.attackCounter += 1
         elif gameStateService.attackCounter >= 1200:
             gameStateService.isScatterMode = True
@@ -174,9 +174,8 @@ while runGame:
     
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
-        inky.moveGhost(pacMan,pathingNodes,board)
-       #for g in ghosts:
-       #    g.moveGhost(pacMan, pathingNodes, board)
+        for g in ghosts:
+           g.moveGhost(pacMan, pathingNodes, board)
 
     #pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
     #neighborstr = ""
@@ -190,7 +189,7 @@ while runGame:
             g.isEaten = False
             g.turnGhostAround()
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
-    drawTileOutlines(screen, board)
+    #drawTileOutlines(screen, board)
     #drawPathingNodes(screen, pathingNodes)
     #drawPathingNodeConnections(screen,pathingNodes)
     #drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
@@ -216,10 +215,10 @@ while runGame:
     #    drawLine(path[len(path) - 1].position, pacMan.getTilePosition(), screen,(255,0,0))
     
 
-    drawPath(pinky.CurrentPath, (255,192,203), screen)
-    drawPath(blinky.CurrentPath, (255,0,0), screen)
-    drawPath(sue.CurrentPath, (255,140,0), screen)
-    drawPath(inky.CurrentPath, (0, 255, 255), screen)
+    drawPathToTarget(pinky.CurrentPath, pinky.CurrentTarget, (255,192,203), screen,6)
+    drawPathToTarget(blinky.CurrentPath, blinky.CurrentTarget, (255,0,0), screen,8)
+    drawPathToTarget(sue.CurrentPath, sue.CurrentTarget, (255,140,0), screen,6)
+    drawPathToTarget(inky.CurrentPath, inky.CurrentTarget, (0, 255, 255), screen,6)
 
     
     drawHud(gameStateService,screen, pacManImage, font)    

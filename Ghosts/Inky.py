@@ -21,5 +21,5 @@ class Inky(Ghost):
         blinkyPosition = self.blinky.getCurrentTile()
         positionDifference = ((targetStart[0] - blinkyPosition[0]), (targetStart[1] - blinkyPosition[1]))
         proposedPosition = ((targetStart[0] + positionDifference[0]), (targetStart[1] + positionDifference[1]))
-        actualPosition = getNearestValidPosition(proposedPosition)
-        self.moveGhostToTarget(actualPosition, pathingNodes, board)
+        self.CurrentTarget = getNearestValidPosition(proposedPosition)
+        self.moveGhostToTarget(self.CurrentTarget, pathingNodes, board)

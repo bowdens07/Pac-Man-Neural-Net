@@ -13,6 +13,8 @@ class Sue(Ghost):
 
     def moveGhost(self, pacMan: PacMan, pathingNodes: PathingNodes, board: list[list[int]]):
         if Ghost._distanceToTargetHeuristic(self.getCurrentTile(),pacMan.getCurrentTile()) > 8:
-            self.moveGhostToTarget(pacMan.getCurrentTile(), pathingNodes, board)
+            self.CurrentTarget = pacMan.getCurrentTile()
         else:
-            self.moveGhostToTarget(self._getScatterTarget(), pathingNodes, board)
+            self.CurrentTarget = self._getScatterTarget()
+            
+        self.moveGhostToTarget(self.CurrentTarget, pathingNodes, board)

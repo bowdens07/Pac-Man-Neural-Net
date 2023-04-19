@@ -18,7 +18,7 @@ def drawPathingNodes(screen, pathingNodes:PathingNodes):
         pg.draw.circle(screen,(255,0,255), ((30 * position[1]) + 15, (28 * position[0])+ 14),10)       
 
 def convertPositionToScreenCords(position:tuple[int,int]):
-    return ((30 * position[1]) + 15, (28 * position[0])+ 14)
+    return ((30 * position[1]) + 15, (28 * position[0])+ 14) 
 
 def drawPathingNodeConnections(screen, pathingNodes:PathingNodes):
     for pathingNode in pathingNodes.nodeDict.values():
@@ -38,10 +38,26 @@ def drawFromPositionToPositions(position1:tuple[int,int],targets:list[tuple[int,
 def drawLine(position1, position2, screen, color):
     pg.draw.line(screen,color, convertPositionToScreenCords(position1), convertPositionToScreenCords(position2),2)
 
-def drawPath(path:list[PathingNode], color:tuple[int,int,int], screen):
+def drawPathToTarget(path:list[PathingNode], target:tuple[int,int], color:tuple[int,int,int], screen, targetSize:int):
+    drawPath(path,color,screen,target)
+    drawTargetNode(target,color,screen, targetSize)
+
+def drawPath(path:list[PathingNode], color:tuple[int,int,int], screen, target:tuple[int,int]):
     if path is not None and len(path) > 0:
         for i in range(len(path) -1):
             drawLine(path[i].position, path[i + 1].position, screen,color)
+        drawLine(path[len(path) - 1].position, target, screen, color)
+
+def drawTargetNode(target:tuple[int,int], color:tuple[int,int,int], screen, targetSize):
+    if target != None:
+        tile_height = getTileHeight(screen)
+        half_tile_height = tile_height * 0.5 
+
+        tile_width = getTileWidth(screen)
+        half_tile_width = tile_width * 0.5 
+        pg.draw.circle(screen, color, (target[1] * tile_width + (half_tile_width), target[0] * tile_height + (half_tile_height)),targetSize) ##consider making this a private method to calc circle size
+
+
 
 def drawHud(gameStateService: GameStateService, screen, pacManImage, font): ##TODO bugged
     scoreText = font.render(f'Score: {gameStateService.score}', True, 'white')
