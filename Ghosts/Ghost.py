@@ -30,6 +30,7 @@ class Ghost:
         ABC.lastPathingNodePosition = (0,0)
         ABC.CurrentPath: list[PathingNode] = []
         ABC.CurrentTarget: tuple[int,int] = None
+        ABC.hasGeneratedNewPath = False
 
     @abstractmethod
     def _getGhostImage(ABC) -> pg.Surface:
@@ -140,8 +141,11 @@ class Ghost:
                 path.append(revPath.pop())
             ABC.CurrentPath = path
             hasGeneratedNewPath = True
+            ABC.hasGeneratedNewPath = hasGeneratedNewPath
+            ABC.CurrentTarget = pacManPosition
             return (hasGeneratedNewPath,path)
         else:
+            ABC.hasGeneratedNewPath = hasGeneratedNewPath
             return (hasGeneratedNewPath,ABC.CurrentPath)
 
     def flee(ABC, pathingNodes:PathingNodes):
@@ -158,6 +162,7 @@ class Ghost:
                 path = [start, target]
                 ABC.CurrentPath = path
                 hasGeneratedNewPath = True
+                ABC.CurrentTarget = target.position
             return (hasGeneratedNewPath,ABC.CurrentPath)
 
     def moveToAStarTarget(ABC, target: tuple[int,int], pathingNodes: PathingNodes, fleeing:bool):
@@ -207,6 +212,7 @@ class Ghost:
         ABC.direction = Directions.reverseDirection(ABC.direction)
         ABC.dirRequest = ABC.direction
         ABC.CurrentPath = []
+        ABC.CurrentTarget = None
 
     def __moveGhostforward(ABC, validDirections:list[bool]):
         if ABC.direction == Directions.RIGHT and validDirections[Directions.RIGHT.value]:
@@ -244,7 +250,6 @@ class Ghost:
                     ghostTarget = target
             pathingNodesWithTarget = pathingNodes.getCopyWithTarget(ghostTarget, board)
             self.moveToAStarTarget(ghostTarget, pathingNodesWithTarget, isFleeing)
-            self.CurrentTarget = ghostTarget
 
     def checkCollision(ABC): #returns valid turns and if ghost is in the box -> pretty gross code todo clean up 
         ABC.isInBox = False

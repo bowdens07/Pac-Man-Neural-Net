@@ -214,7 +214,7 @@ while runGame:
     #        drawLine(path[i].position, path[i + 1].position, screen,(255,0,0))
     #    drawLine(path[len(path) - 1].position, pacMan.getTilePosition(), screen,(255,0,0))
     
-
+    
     drawPathToTarget(pinky.CurrentPath, pinky.CurrentTarget, (255,192,203), screen,6)
     drawPathToTarget(blinky.CurrentPath, blinky.CurrentTarget, (255,0,0), screen,8)
     drawPathToTarget(sue.CurrentPath, sue.CurrentTarget, (255,140,0), screen,6)

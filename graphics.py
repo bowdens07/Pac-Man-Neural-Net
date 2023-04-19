@@ -46,7 +46,8 @@ def drawPath(path:list[PathingNode], color:tuple[int,int,int], screen, target:tu
     if path is not None and len(path) > 0:
         for i in range(len(path) -1):
             drawLine(path[i].position, path[i + 1].position, screen,color)
-        drawLine(path[len(path) - 1].position, target, screen, color)
+        if target != None:
+            drawLine(path[len(path) - 1].position, target, screen, color)
 
 def drawTargetNode(target:tuple[int,int], color:tuple[int,int,int], screen, targetSize):
     if target != None:
