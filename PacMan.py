@@ -159,7 +159,17 @@ class PacMan:
             self.turnManager.right = True
             self.turnManager.left = True
         #print(f"right:{self.turnManager.right} left:{self.turnManager.left} up:{self.turnManager.up} down:{self.turnManager.down}")
-    
+
+    def trySetDirection(self,direction_request):
+        if direction_request == Directions.RIGHT and self.turnManager.right:
+            self.direction = direction_request
+        if direction_request == Directions.LEFT and self.turnManager.left:
+            self.direction = direction_request
+        if direction_request == Directions.DOWN and self.turnManager.down:
+            self.direction = direction_request
+        if direction_request == Directions.UP and self.turnManager.up:
+            self.direction = direction_request
+
     def movePacMan(self):
         if self.xPos > 900: #wrap pac man if he moves off screen, magic numbers are for visuals
             self.xPos = -47

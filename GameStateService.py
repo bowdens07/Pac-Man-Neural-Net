@@ -12,6 +12,7 @@ class GameStateService:
         self.isScatterMode = True
         self.scatterCounter = 0
         self.attackCounter = 0
+        self.runGame = True
 
     def isInTheBox(self, xPosition:int, yPosition:int) -> bool:
         return 345 < xPosition < 565 and 380 < yPosition < 490

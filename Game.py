@@ -38,7 +38,7 @@ blinky = Blinky(gameStateService, screen, board, 53,48)
 inky = Inky(gameStateService, screen, board, 413,440, blinky)
 pinky = Pinky(gameStateService, screen, board, 413,440)
 sue = Sue(gameStateService, screen, board, 413,440)
-ghosts: list[Ghost] = [blinky,inky,pinky,sue]#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = [blinky,inky,]#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -115,12 +115,53 @@ def checkGhostCollision(pacMan:PacMan, ghosts:list[Ghost], gameStateService:Game
                     gameStateService.gameStart = False
                     gameStateService.startupCounter = 0
 
+def handleGameEvents(direction_request, gameStateService:GameStateService):
+    for event in pg.event.get():
+            #process keyboard inputs
+            if event.type == pg.QUIT:
+                gameStateService.runGame = False
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_RIGHT:
+                    direction_request = Directions.RIGHT
+                if event.key == pg.K_LEFT:
+                    direction_request = Directions.LEFT
+                if event.key == pg.K_UP:
+                    direction_request = Directions.UP
+                if event.key == pg.K_DOWN:
+                    direction_request = Directions.DOWN
+                if event.key == pg.K_SPACE and (gameStateService.gameOver or gameStateService.gameWon):
+                    gameStateService.startupCounter = 0 
+                    resetPositions()
+                    board = copy.deepcopy(default_board)
+                    pacMan.setNewBoard(board)
+                    for g in ghosts:
+                        g.setNewBoard(board)   
+                    gameStateService.gameOver = False
+                    gameStateService.gameWon = False  
+                    gameStateService.lives = 3
+
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_RIGHT and direction_request == Directions.RIGHT:
+                    direction_request = pacMan.direction
+                    #print("requesting Right")
+                if event.key == pg.K_LEFT  and direction_request == Directions.LEFT:
+                    direction_request = pacMan.direction
+                    #print("requesting Left")
+                if event.key == pg.K_UP  and direction_request == Directions.UP:
+                    direction_request = pacMan.direction
+                    #print("requesting Up")
+                if event.key == pg.K_DOWN  and direction_request == Directions.DOWN: 
+                    direction_request = pacMan.direction  
+                    #print("requesting Down")
+    return direction_request
+
+
 
 direction_request = Directions.RIGHT
 pathingNodes = PathingNodes(board)
 
 #Main game loop
-while runGame:
+while gameStateService.runGame:
     timer.tick(fps)
 
     #counter stuff animates pac man chomping, not in love with it, but hey
@@ -148,12 +189,11 @@ while runGame:
             gameStateService.attackCounter = 0
             print("Scatter mode beginning")
         
-
     #manage powerPellets
     if gameStateService.powerPellet and gameStateService.powerCounter < 600:
         gameStateService.powerCounter += 1
         print(gameStateService.powerCounter)
-    elif gameStateService.powerPellet and gameStateService.powerCounter >= 600:
+    elif gameStateService.powerPellet and gameStateService.powerCounter >= 6000:
         gameStateService.powerCounter = 0
         gameStateService.powerPellet = False
         print("PowerPellet Expired")
@@ -170,8 +210,6 @@ while runGame:
     for g in ghosts:
         g.updateSpeed()
 
-    
-    
     if gameStateService.gameStart and not gameStateService.gameOver and not gameStateService.gameWon:
         pacMan.movePacMan()
         for g in ghosts:
@@ -189,7 +227,7 @@ while runGame:
             g.isEaten = False
             g.turnGhostAround()
     draw_board(screen, board, boardColor, screen.get_height(), screen.get_width(), flicker)
-    #drawTileOutlines(screen, board)
+    drawTileOutlines(screen, board)
     #drawPathingNodes(screen, pathingNodes)
     #drawPathingNodeConnections(screen,pathingNodes)
     #drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
@@ -231,55 +269,8 @@ while runGame:
 
     checkGhostCollision(pacMan, ghosts, gameStateService)
 
-    for event in pg.event.get():
-        #process keyboard inputs
-        if event.type == pg.QUIT:
-            runGame = False
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_RIGHT:
-                direction_request = Directions.RIGHT
-            if event.key == pg.K_LEFT:
-                direction_request = Directions.LEFT
-            if event.key == pg.K_UP:
-                direction_request = Directions.UP
-            if event.key == pg.K_DOWN:
-                direction_request = Directions.DOWN
-            if event.key == pg.K_SPACE and (gameStateService.gameOver or gameStateService.gameWon):
-                gameStateService.startupCounter = 0 
-                resetPositions()
-                board = copy.deepcopy(default_board)
-                pacMan.setNewBoard(board)
-                for g in ghosts:
-                    g.setNewBoard(board)   
-                gameStateService.gameOver = False
-                gameStateService.gameWon = False  
-
-        if event.type == pg.KEYUP:
-            if event.key == pg.K_RIGHT and direction_request == Directions.RIGHT:
-                direction_request = pacMan.direction
-                #print("requesting Right")
-            if event.key == pg.K_LEFT  and direction_request == Directions.LEFT:
-                direction_request = pacMan.direction
-                #print("requesting Left")
-            if event.key == pg.K_UP  and direction_request == Directions.UP:
-                direction_request = pacMan.direction
-                #print("requesting Up")
-            if event.key == pg.K_DOWN  and direction_request == Directions.DOWN: 
-                direction_request = pacMan.direction  
-                #print("requesting Down")
-        #set the new direction if you can
-    if direction_request == Directions.RIGHT and pacMan.turnManager.right:
-        pacMan.direction = direction_request
-        #print("Turning Right")
-    if direction_request == Directions.LEFT and pacMan.turnManager.left:
-        pacMan.direction = direction_request
-        #print("Turning Left")
-    if direction_request == Directions.DOWN and pacMan.turnManager.down:
-        pacMan.direction = direction_request
-        #print("Turning Down")
-    if direction_request == Directions.UP and pacMan.turnManager.up:
-        pacMan.direction = direction_request
-        #print("Turning Up")
+    direction_request = handleGameEvents(direction_request,gameStateService)
+    pacMan.trySetDirection(direction_request)
 
     for g in ghosts:
         if gameStateService.isInReviveZone(g.getCenterX(),g.getCenterY()):
