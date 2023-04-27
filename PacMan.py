@@ -170,6 +170,53 @@ class PacMan:
         if direction_request == Directions.UP and self.turnManager.up:
             self.direction = direction_request
 
+    #Right = Forward, Left = turn around, Up = Counter Clockwise, Down = Clockwise
+    #This is for the neural network, it makes it easier to reason in relative directions
+    def trySetRelativeDirection(self, relative_direction_request):
+        absolute_direction = self.__RelativeDirectionToAbsoluteDirection(relative_direction_request)
+        self.trySetDirection(absolute_direction)
+
+
+    def __RelativeDirectionToAbsoluteDirection(self, direction_request):
+        absoluteDirection = Directions.RIGHT
+        if self.direction == Directions.RIGHT:
+            if direction_request == Directions.RIGHT:     
+                absoluteDirection = Directions.RIGHT
+            elif direction_request == Directions.LEFT:
+                absoluteDirection = Directions.LEFT
+            elif direction_request == Directions.UP:
+                absoluteDirection = Directions.UP           
+            elif direction_request == Directions.DOWN:
+                absoluteDirection = Directions.DOWN
+        if self.direction == Directions.LEFT:
+            if direction_request == Directions.RIGHT:     
+                absoluteDirection = Directions.LEFT
+            elif direction_request == Directions.LEFT:
+                absoluteDirection = Directions.RIGHT
+            elif direction_request == Directions.UP:
+                absoluteDirection = Directions.UP           
+            elif direction_request == Directions.DOWN:
+                absoluteDirection = Directions.DOWN
+        if self.direction == Directions.UP:
+            if direction_request == Directions.RIGHT:     
+                absoluteDirection = Directions.UP
+            elif direction_request == Directions.LEFT:
+                absoluteDirection = Directions.DOWN
+            elif direction_request == Directions.UP:
+                absoluteDirection = Directions.RIGHT           
+            elif direction_request == Directions.DOWN:
+                absoluteDirection = Directions.LEFT
+        if self.direction == Directions.DOWN:
+            if direction_request == Directions.RIGHT:     
+                absoluteDirection = Directions.DOWN
+            elif direction_request == Directions.LEFT:
+                absoluteDirection = Directions.UP
+            elif direction_request == Directions.UP:
+                absoluteDirection = Directions.RIGHT           
+            elif direction_request == Directions.DOWN:
+                absoluteDirection = Directions.LEFT
+        return absoluteDirection
+
     def movePacMan(self):
         if self.xPos > 900: #wrap pac man if he moves off screen, magic numbers are for visuals
             self.xPos = -47

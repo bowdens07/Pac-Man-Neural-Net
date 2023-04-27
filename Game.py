@@ -38,7 +38,7 @@ blinky = Blinky(gameStateService, screen, board, 53,48)
 inky = Inky(gameStateService, screen, board, 413,440, blinky)
 pinky = Pinky(gameStateService, screen, board, 413,440)
 sue = Sue(gameStateService, screen, board, 413,440)
-ghosts: list[Ghost] = [blinky,inky,]#[blinky,inky,pinky,sue]
+ghosts: list[Ghost] = []#[blinky,inky,pinky,sue]
 
 
 flicker = False
@@ -200,7 +200,7 @@ while gameStateService.runGame:
         for g in ghosts:
             g.isEaten = False 
 
-    if gameStateService.startupCounter < 240 and not gameStateService.gameOver and not gameStateService.gameWon:
+    if gameStateService.startupCounter < 0 and not gameStateService.gameOver and not gameStateService.gameWon:
         gameStateService.gameStart = False
         gameStateService.startupCounter += 1
     else:
