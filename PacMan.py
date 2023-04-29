@@ -96,10 +96,12 @@ class PacMan:
                 if boardContent == 1:
                     self.board[tilePosition[0]][tilePosition[1]] = 0 #eat the pellet
                     curScore += 10
+                    self.gameStateService.pelletCounter = 0
                 if boardContent == 2:
                     self.board[tilePosition[0]][tilePosition[1]] = 0 #eat the pellet
                     curScore += 50
                     power = True
+                    self.gameStateService.pelletCounter = 0
                     print("Power pellet Eaten")
                     powerCount = 0
         return curScore, power, powerCount 
@@ -216,6 +218,17 @@ class PacMan:
             elif direction_request == Directions.DOWN:
                 absoluteDirection = Directions.LEFT
         return absoluteDirection
+    
+    def getRelativeAvailableDirections(self) -> list[int]:
+        turnManager = self.turnManager
+        if self.direction == Directions.RIGHT:
+            return [turnManager.right, turnManager.left, turnManager.up, turnManager.down]
+        if self.direction == Directions.LEFT:
+            return [turnManager.left, turnManager.right, turnManager.up, turnManager.down]
+        if self.direction == Directions.UP:
+            return [turnManager.up, turnManager.down, turnManager.right, turnManager.left]
+        if self.direction == Directions.DOWN:
+            return [turnManager.down, turnManager.up, turnManager.right, turnManager.left]       
 
     def movePacMan(self):
         if self.xPos > 900: #wrap pac man if he moves off screen, magic numbers are for visuals

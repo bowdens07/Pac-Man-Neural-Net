@@ -16,7 +16,7 @@ from utilities.PathingNode import PathingNode, PathingNodes
 class PacManGame:
 
 
-    def __init__(self, lockFrameRate:bool, drawGhostPaths:bool, pacManLives:int, startUpTime:int, exitOnLoss:bool):
+    def __init__(self, lockFrameRate:bool, drawGhostPaths:bool, pacManLives:int, startUpTime:int, exitOnLoss:bool, pelletTimeLimit:bool):
         pg.init()
         self.lockFrameRate = lockFrameRate
         self.drawGhostPaths = drawGhostPaths
@@ -31,13 +31,14 @@ class PacManGame:
         self.pacMan = PacMan(self.gameStateService, self.screen, self.board, 450,663)
         self.startUpTime = startUpTime
         self.exitOnLoss = exitOnLoss
+        self.pelletTimeLimit = pelletTimeLimit
 
         #Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
         self.blinky = Blinky(self.gameStateService, self.screen, self.board, 53,48)
         self.inky = Inky(self.gameStateService, self.screen, self.board, 413,440, self.blinky)
         self.pinky = Pinky(self.gameStateService, self.screen, self.board, 413,440)
         self.sue = Sue(self.gameStateService, self.screen, self.board, 413,440)
-        self.ghosts: list[Ghost] = [self.blinky,self.inky,self.pinky,self.sue]#[self.blinky,self.inky,self.pinky,self.sue]
+        self.ghosts: list[Ghost] = []#[self.blinky,self.inky,self.pinky,self.sue]
 
         self.flicker = False
         self.gameStateService.powerPellet = False
@@ -46,6 +47,8 @@ class PacManGame:
         self.direction_request = Directions.RIGHT
         self.pathingNodes = PathingNodes(self.board)
        
+    def getAvailablePacManDirections(self) -> list[int]:
+        return self.pacMan.getRelativeAvailableDirections()
 
     def __resetPositions(self):
         self.gameStateService.powerPellet = False
@@ -165,7 +168,7 @@ class PacManGame:
     def runSingleGameLoop(self) -> bool:
         self.timer.tick(self.fps if self.lockFrameRate else 0)
 
-        #counter stuff animates pac man chomping, not in love with it, but hey
+        #counter stuff animates pac man chomping, consider refactor
         if self.gameStateService.counter < 26:
             self.gameStateService.counter +=1
             if self.gameStateService.counter > 3:
@@ -223,6 +226,8 @@ class PacManGame:
         #print(neighborstr)
 
         self.gameStateService.score, self.gameStateService.powerPellet, self.gameStateService.powerCounter = self.pacMan.checkCollisions(self.gameStateService.score, self.gameStateService.powerPellet, self.gameStateService.powerCounter)
+        self.gameStateService.pelletCounter += 1
+
         if self.gameStateService.powerCounter == 0 and self.gameStateService.powerPellet: #If the counter is 0 and we ate a pellet, make ghosts eatable again, and turn them around
             for g in self.ghosts: 
                 g.isEaten = False
@@ -265,4 +270,9 @@ class PacManGame:
                 g.isDead = False
         pg.display.flip() ##draws the screen
         
+        #if pelletTimeLimit mode and pac man hasn't eaten a pellet in 10 sec, subtract from score and end the game
+        if self.pelletTimeLimit and self.gameStateService.pelletCounter > 600:
+            self.gameStateService.runGame = False
+            self.gameStateService.score = self.gameStateService.score - 500
+
         return self.gameStateService.runGame
