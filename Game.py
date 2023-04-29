@@ -16,7 +16,7 @@ from utilities.PathingNode import PathingNode, PathingNodes
 class PacManGame:
 
 
-    def __init__(self, lockFrameRate:bool, drawGhostPaths:bool, pacManLives:int, startUpTime:int, exitOnLoss:bool, pelletTimeLimit:bool):
+    def __init__(self, lockFrameRate:bool, drawGhostPaths:bool, pacManLives:int, startUpTime:int, allowReplays:bool, pelletTimeLimit:bool, renderGraphics:bool):
         pg.init()
         self.lockFrameRate = lockFrameRate
         self.drawGhostPaths = drawGhostPaths
@@ -30,8 +30,9 @@ class PacManGame:
         self.gameStateService = GameStateService(pacManLives)
         self.pacMan = PacMan(self.gameStateService, self.screen, self.board, 450,663)
         self.startUpTime = startUpTime
-        self.exitOnLoss = exitOnLoss
+        self.allowReplays = allowReplays
         self.pelletTimeLimit = pelletTimeLimit
+        self.renderGraphics = renderGraphics
 
         #Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
         self.blinky = Blinky(self.gameStateService, self.screen, self.board, 53,48)
@@ -91,7 +92,7 @@ class PacManGame:
             if not gameStateService.powerPellet: 
                 if (not g.isDead and pacMan.hitbox.colliderect(g.hitBox)):
                     if gameStateService.lives > 0:
-                        print("Pac-Man Died, resetting positions")
+                        #print("Pac-Man Died, resetting positions")
                         gameStateService.lives -= 1
                         gameStateService.startupCounter = 0 
                         self.__resetPositions()
@@ -106,10 +107,10 @@ class PacManGame:
                     g.isEaten = True
                     numGhosts = len([g for g in ghosts if g.isEaten])
                     gameStateService.score += (2 ** numGhosts) * 100
-                    print("Ate ghost")
+                    #print("Ate ghost")
                 else:
                     if gameStateService.lives > 0:
-                        print("Pac-Man Died, resetting positions")
+                        #print("Pac-Man Died, resetting positions")
                         gameStateService.lives -= 1
                         gameStateService.startupCounter = 0 
                         self.__resetPositions()
@@ -119,13 +120,13 @@ class PacManGame:
                         gameStateService.gameStart = False
                         gameStateService.startupCounter = 0
 
-    def __handleGameEvents(self):
+    def __handleGameEvents(self, captureKeyboardLogic: bool = True):
         for event in pg.event.get():
                 #process keyboard inputs
                 if event.type == pg.QUIT:
                     self.gameStateService.runGame = False
                     print("trying to quit!")
-                if event.type == pg.KEYDOWN:
+                if captureKeyboardLogic and event.type == pg.KEYDOWN:
                     if event.key == pg.K_RIGHT:
                         self.direction_request = Directions.RIGHT
                     if event.key == pg.K_LEFT:
@@ -137,10 +138,10 @@ class PacManGame:
                     if event.key == pg.K_SPACE and (self.gameStateService.gameOver or self.gameStateService.gameWon):
                         self.gameStateService.startupCounter = 0 
                         self.__resetPositions()
-                        board = copy.deepcopy(default_board)
-                        self.pacMan.setNewBoard(board)
+                        self.board = copy.deepcopy(default_board)
+                        self.pacMan.setNewBoard(self.board)
                         for g in self.ghosts:
-                            g.setNewBoard(board)   
+                            g.setNewBoard(self.board)   
                         self.gameStateService.gameOver = False
                         self.gameStateService.gameWon = False  
                         self.gameStateService.lives = 3
@@ -165,7 +166,7 @@ class PacManGame:
 
     #Main game loop
     #returns bool to inidicate if game is over or not
-    def runSingleGameLoop(self) -> bool:
+    def runSingleGameLoop(self, turnRequest:Directions = None) -> bool:
         self.timer.tick(self.fps if self.lockFrameRate else 0)
 
         #counter stuff animates pac man chomping, consider refactor
@@ -184,23 +185,23 @@ class PacManGame:
             elif self.gameStateService.scatterCounter >= 420:
                 self.gameStateService.scatterCounter = 0
                 self.gameStateService.isScatterMode = False
-                print("Scatter mode over")
+                #print("Scatter mode over")
         else:
             if self.gameStateService.attackCounter < 1200:
                 self.gameStateService.attackCounter += 1
             elif self.gameStateService.attackCounter >= 1200:
                 self.gameStateService.isScatterMode = True
                 self.gameStateService.attackCounter = 0
-                print("Scatter mode beginning")
+                #print("Scatter mode beginning")
             
         #manage powerPellets
         if self.gameStateService.powerPellet and self.gameStateService.powerCounter < 600:
             self.gameStateService.powerCounter += 1
-            print(self.gameStateService.powerCounter)
+            #print(self.gameStateService.powerCounter)
         elif self.gameStateService.powerPellet and self.gameStateService.powerCounter >= 600:
             self.gameStateService.powerCounter = 0
             self.gameStateService.powerPellet = False
-            print("PowerPellet Expired")
+            #print("PowerPellet Expired")
             for g in self.ghosts:
                 g.isEaten = False 
         
@@ -219,6 +220,7 @@ class PacManGame:
             for g in self.ghosts:
                 g.moveGhost(self.pacMan, self.pathingNodes, self.board)
 
+        #print(f"Nearest Pellet Tile {self.pacMan.getNearestPellet()[0]},{self.pacMan.getNearestPellet()[1]}")
         #pacManNeighbors = pathingNodes.getNeighboringNodes(pacMan.getTilePosition(),board)
         #neighborstr = ""
         #for neighbor in pacManNeighbors:
@@ -232,15 +234,19 @@ class PacManGame:
             for g in self.ghosts: 
                 g.isEaten = False
                 g.turnGhostAround()
-        draw_board(self.screen, self.board, self.boardColor, self.screen.get_height(), self.screen.get_width(), self.flicker)
-        #drawTileOutlines(self.screen, self.board)
-        #drawPathingNodes(screen, pathingNodes)
-        #drawPathingNodeConnections(screen,pathingNodes)
-        #drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
-
-        self.pacMan.draw(self.gameStateService)
+        if(self.renderGraphics):
+            draw_board(self.screen, self.board, self.boardColor, self.screen.get_height(), self.screen.get_width(), self.flicker)
+            #drawTileOutlines(self.screen, self.board)
+            #drawPathingNodes(screen, pathingNodes)
+            #drawPathingNodeConnections(screen,pathingNodes)
+            #drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
+        
+        if(self.renderGraphics):
+            self.pacMan.draw(self.gameStateService)
+            
         for g in self.ghosts:
-            g.draw()
+            if(self.renderGraphics):
+                g.draw()
             g.checkCollision()
         
         if self.drawGhostPaths:
@@ -249,8 +255,8 @@ class PacManGame:
             drawPathToTarget(self.sue.CurrentPath, self.sue.CurrentTarget, (255,140,0), self.screen,6)
             drawPathToTarget(self.inky.CurrentPath, self.inky.CurrentTarget, (0, 255, 255), self.screen,6)
 
-        
-        drawHud(self.gameStateService,self.screen, self.pacManImage, self.font)    
+        if(self.renderGraphics):    
+            drawHud(self.gameStateService,self.screen, self.pacManImage, self.font)    
         
         #check for game win
         self.gameStateService.gameWon = True
@@ -259,20 +265,28 @@ class PacManGame:
                 self.gameStateService.gameWon = False
 
         self.__checkGhostCollision(self.pacMan, self.ghosts, self.gameStateService)
-        if self.exitOnLoss and self.gameStateService.gameOver:
+        
+        if not self.allowReplays and (self.gameStateService.gameOver or self.gameStateService.gameWon):
             return False
 
-        self.__handleGameEvents()
-        self.pacMan.trySetDirection(self.direction_request)
+        if turnRequest == None:
+            self.__handleGameEvents()
+            self.pacMan.trySetDirection(self.direction_request)
+        else:
+            self.__handleGameEvents(captureKeyboardLogic=False)
+            self.pacMan.trySetRelativeDirection(turnRequest)
+
 
         for g in self.ghosts:
             if self.gameStateService.isInReviveZone(g.getCenterX(),g.getCenterY()):
                 g.isDead = False
-        pg.display.flip() ##draws the screen
+
+        if(self.renderGraphics):
+            pg.display.flip() ##draws the screen
         
         #if pelletTimeLimit mode and pac man hasn't eaten a pellet in 10 sec, subtract from score and end the game
         if self.pelletTimeLimit and self.gameStateService.pelletCounter > 600:
+            self.gameStateService.gameOver = True
             self.gameStateService.runGame = False
-            self.gameStateService.score = self.gameStateService.score - 500
 
         return self.gameStateService.runGame

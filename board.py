@@ -72,6 +72,21 @@ def __findNearestNonWallNonBoxTile(position:tuple[int,int]):
             frontier.append(neighbor)
     print("Warning: Could not find a valid position for Inky from the starting point")
 
+#Finds nearest pellet or power pellet tile on a given board
+def findNearestPellet(position:tuple[int,int], board:list[list[int]]):
+    frontier = [position]
+    explored = []
+    while len(frontier) > 0:
+        candidatePosition = frontier.pop(0)
+        if board[candidatePosition[0]][candidatePosition[1]] == 1 or board[candidatePosition[0]][candidatePosition[1]] == 2:
+            return candidatePosition
+        explored.append(candidatePosition)
+        if isValidPosition(candidatePosition) and not isAWall(candidatePosition) and not isInBox(candidatePosition):
+            for neighbor in __getAdjacentPositions(candidatePosition):
+                if(neighbor not in explored):
+                    frontier.append(neighbor)
+    return None #Could not find pellet
+
 def __getAdjacentPositions(position:tuple[int,int]):
     searchDirections = [[1,0],[-1,0],[0,1],[0,-1]] #right, left, up down
     neighbors = []
@@ -81,6 +96,15 @@ def __getAdjacentPositions(position:tuple[int,int]):
             neighbors.append(candidatePosition)
     return neighbors
 
+def getRemainingPellets(board)-> int:
+    remainingPellets = 0
+    for i in range(len(board)):
+        for j in range(len(board[i])):  
+            if board[i][j] == 1 or board[i][j] == 2:
+                remainingPellets += 1
+    return remainingPellets
 
-print(len(default_board))
-print(len(default_board[0]))
+
+#print(len(default_board))
+#print(len(default_board[0]))
+#print(getRemainingPellets(default_board))

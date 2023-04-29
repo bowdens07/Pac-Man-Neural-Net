@@ -1,6 +1,6 @@
 import pygame as pg
 from GameStateService import GameStateService
-from board import isAWall, isInBox, isValidPosition
+from board import findNearestPellet, isAWall, isInBox, isValidPosition
 
 from direction import Directions
 from utilities.TurnManager import TurnManager
@@ -102,7 +102,7 @@ class PacMan:
                     curScore += 50
                     power = True
                     self.gameStateService.pelletCounter = 0
-                    print("Power pellet Eaten")
+                    #print("Power pellet Eaten")
                     powerCount = 0
         return curScore, power, powerCount 
 
@@ -244,4 +244,13 @@ class PacMan:
             self.yPos -= self.curVelocity
         elif self.direction == Directions.DOWN and self.turnManager.down:
             self.yPos += self.curVelocity
+    
+    def getNearestPellet(self):
+        currentTile = self.getCurrentTile()
+        if(isValidPosition(currentTile)):
+            return findNearestPellet(currentTile, self.board)
+        else:
+            return findNearestPellet((15,28),self.board)
+        
+
             
