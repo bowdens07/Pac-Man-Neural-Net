@@ -8,9 +8,8 @@ from graphics import convertPositionToScreenCords
 import pickle
 
 def run_neat(config, generations:int):
-    population = neat.Checkpointer.restore_checkpoint('neat-checkpoint-1153')
-    population.config.fitness_threshold = 2620
-    #population = neat.Population(config)
+    #population = neat.Checkpointer.restore_checkpoint('neat-checkpoint-1185-End-Of-Ghost-Training')
+    population = neat.Population(config)
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)

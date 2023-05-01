@@ -11,12 +11,28 @@ from Ghosts.Inky import Inky
 from Ghosts.Pinky import Pinky
 from Ghosts.Sue import Sue
 from utilities.PathingNode import PathingNode, PathingNodes
+import gym
+import numpy as np
+from gym import spaces
 
 
-class PacManGame:
+
+class PacManGame(gym.Env):
 
 
-    def __init__(self, lockFrameRate:bool, drawGhostPaths:bool, pacManLives:int, startUpTime:int, allowReplays:bool, pelletTimeLimit:bool, renderGraphics:bool):
+    def __init__(self, lockFrameRate:bool, drawGhostPaths:bool, pacManLives:int, startUpTime:int, allowReplays:bool, pelletTimeLimit:bool, renderGraphics:bool, gameID:int=0):
+        super(PacManGame,self).__init__()
+        #OpenAI Gym Interface Definition
+        # Define action and observation space
+        # They must be gym.spaces objects
+        # Example when using discrete actions:
+        self.action_space = spaces.Discrete(4)
+        self.observation_space = spaces.Box(low=0, high=950,
+                                            shape=(17,), dtype=np.int16)
+        #End OpenAI Gym Interface Definition
+        self.gameID = gameID
+
+
         pg.init()
         self.lockFrameRate = lockFrameRate
         self.drawGhostPaths = drawGhostPaths
@@ -34,6 +50,7 @@ class PacManGame:
         self.pelletTimeLimit = pelletTimeLimit
         self.renderGraphics = renderGraphics
         self.lingeredOnTileCounter = 0
+        self.previousScore = self.gameStateService.score
 
         #Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
         self.blinky = Blinky(self.gameStateService, self.screen, self.board, 53,48)
@@ -49,7 +66,63 @@ class PacManGame:
         self.direction_request = Directions.RIGHT
         self.pathingNodes = PathingNodes(self.board)
         self.lastPacManPosition = self.pacMan.getCurrentTile()
-       
+
+    def calculateReward(self):
+        reward = self.gameStateService.score - self.previousScore
+        if self.gameStateService.gameOver:
+            reward = reward - 500
+        if self.gameStateService.gameWon:
+            reward = reward + 2000
+        if self.lingeredOnTileCounter > 0:
+            reward = reward - 100
+            self.lingeredOnTileCounter = 0
+        return reward
+
+    #openAI interface methods
+    def step(self, action):
+        dirRequest = Directions(action)
+        runGame = self.runSingleGameLoop(dirRequest)
+        observation = np.asarray(self.__returnObservation(),np.int16)
+        reward = self.calculateReward()
+        self.previousScore = self.gameStateService.score
+        info = {}
+        return observation, reward, not runGame, info
+
+    def reset(self):
+        self.gameStateService = GameStateService(0)
+        self.runGame = True
+        self.__resetPositions()
+        self.board = copy.deepcopy(default_board)
+        self.pacMan.setNewBoard(self.board)
+        for g in self.ghosts:
+            g.setNewBoard(self.board)   
+        return np.asarray(self.__returnObservation(),np.int16)  # reward, done, info can't be included
+
+    def render(self):
+        pass
+        
+
+    def close(self):
+        pg.quit()   
+    #end openAI methods
+
+    def __returnObservation(self) -> list[int]:
+        nearestPelletDirection = self.pacMan.getRelativeDirectionToNearestPellet()
+        availableTurns = self.pacMan.getRelativeAvailableDirections()
+        observation = [
+                self.pacMan.getCenterX(), self.pacMan.getCenterY(),
+                self.pacMan.direction.value, 
+                self.blinky.getCenterX(),self.blinky.getCenterY(), 
+                self.pinky.getCenterX(),self.pinky.getCenterY(), 
+                self.sue.getCenterX(),self.sue.getCenterY(),
+                self.inky.getCenterX(),self.inky.getCenterY(), 
+                int(self.gameStateService.powerPellet), 
+                nearestPelletDirection.value,
+                int(availableTurns[0]),int(availableTurns[1]),int(availableTurns[2]),int(availableTurns[3])
+            ]        
+        return observation
+
+
     def getAvailablePacManDirections(self) -> list[int]:
         return self.pacMan.getRelativeAvailableDirections()
 
