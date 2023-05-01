@@ -72,6 +72,6 @@ if __name__ == '__main__':
 
     print("--------- Starting Learning ---------")
     callback = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=log_dir)
-    model.learn(total_timesteps=9000000, callback=callback, tb_log_name="First_Pass_PacMan_PPO")
+    model.learn(total_timesteps=10000000, callback=callback, tb_log_name="First_Pass_PacMan_PPO")
     model.save("PacManModelFinished")
     print("--------- Done Learning ---------")

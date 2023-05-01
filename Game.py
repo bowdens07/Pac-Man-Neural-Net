@@ -82,7 +82,8 @@ class PacManGame(gym.Env):
     #openAI interface methods
     def step(self, action):
         dirRequest = Directions(action)
-        runGame = self.runSingleGameLoop(dirRequest)
+        for i in range(5):
+            runGame = self.runSingleGameLoop(dirRequest)
         observation = np.asarray(self.__returnObservation(),np.int16)
         reward = self.calculateReward()
         self.previousScore = self.gameStateService.score
