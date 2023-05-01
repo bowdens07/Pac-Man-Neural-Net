@@ -96,6 +96,14 @@ def __getAdjacentPositions(position:tuple[int,int]):
             neighbors.append(candidatePosition)
     return neighbors
 
+def getValidAdjacentPositions(position:tuple[int,int]) -> list[tuple[int,int]]:
+    adjacentPositionsIncludingWalls = __getAdjacentPositions(position)
+    validAdjacentPositions = []
+    for candidatePosition in adjacentPositionsIncludingWalls:
+        if not isAWall(candidatePosition) and not isInBox(candidatePosition):
+            validAdjacentPositions.append(candidatePosition)
+    return validAdjacentPositions
+
 def getRemainingPellets(board)-> int:
     remainingPellets = 0
     for i in range(len(board)):

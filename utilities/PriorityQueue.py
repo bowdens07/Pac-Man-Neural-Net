@@ -13,12 +13,12 @@ class PriorityQueue:
 				break
 		self.put(item, priority)
 
-	def put(self, item:PathingNode, priority:int):
+	def put(self, item, priority:int):
 		node = [item,priority]
 		self.queue.append(node)
 		self.queue.sort(key=itemgetter(1))
 
-	def get(self) -> PathingNode:
+	def get(self):
 		if len(self.queue) == 0:
 			return None
 		node = self.queue.pop(0)

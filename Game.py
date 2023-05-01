@@ -4,7 +4,7 @@ from Ghosts.Ghost import Ghost
 from PacMan import PacMan
 from direction import Directions
 from board import default_board
-from graphics import convertPositionToScreenCords, draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPath, drawPathToTarget, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines
+from graphics import convertPositionToScreenCords, draw_board, drawFromPositionToPositions, drawHud, drawLine, drawPath, drawPathToTarget, drawPathingNodeConnections, drawPathingNodes, drawTileOutlines, drawTilePath
 from GameStateService import GameStateService
 from Ghosts.Blinky import Blinky
 from Ghosts.Inky import Inky
@@ -33,13 +33,14 @@ class PacManGame:
         self.allowReplays = allowReplays
         self.pelletTimeLimit = pelletTimeLimit
         self.renderGraphics = renderGraphics
+        self.lingeredOnTileCounter = 0
 
         #Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
         self.blinky = Blinky(self.gameStateService, self.screen, self.board, 53,48)
         self.inky = Inky(self.gameStateService, self.screen, self.board, 413,440, self.blinky)
         self.pinky = Pinky(self.gameStateService, self.screen, self.board, 413,440)
         self.sue = Sue(self.gameStateService, self.screen, self.board, 413,440)
-        self.ghosts: list[Ghost] = []#[self.blinky,self.inky,self.pinky,self.sue]
+        self.ghosts: list[Ghost] = [self.blinky,self.inky,self.pinky,self.sue]#[self.blinky,self.inky,self.pinky,self.sue]
 
         self.flicker = False
         self.gameStateService.powerPellet = False
@@ -47,6 +48,7 @@ class PacManGame:
 
         self.direction_request = Directions.RIGHT
         self.pathingNodes = PathingNodes(self.board)
+        self.lastPacManPosition = self.pacMan.getCurrentTile()
        
     def getAvailablePacManDirections(self) -> list[int]:
         return self.pacMan.getRelativeAvailableDirections()
@@ -236,17 +238,20 @@ class PacManGame:
                 g.turnGhostAround()
         if(self.renderGraphics):
             draw_board(self.screen, self.board, self.boardColor, self.screen.get_height(), self.screen.get_width(), self.flicker)
-            #drawTileOutlines(self.screen, self.board)
+            drawTileOutlines(self.screen, self.board)
             #drawPathingNodes(screen, pathingNodes)
             #drawPathingNodeConnections(screen,pathingNodes)
             #drawFromPositionToPositions(pacMan.getTilePosition(),[neighborPosition[0].position for neighborPosition in pacManNeighbors], screen)
-        
-        if(self.renderGraphics):
-            self.pacMan.draw(self.gameStateService)
+            
+            #path = self.pacMan.getAStarTarget(self.pacMan.getNearestPellet())
+            #drawTilePath(path,(255,255,0),self.screen)
+            #print(f"{self.pacMan.getRelativeDirectionToNearestPellet()}")
+
+
+        self.pacMan.draw(self.gameStateService, self.renderGraphics)
             
         for g in self.ghosts:
-            if(self.renderGraphics):
-                g.draw()
+            g.draw(self.renderGraphics)
             g.checkCollision()
         
         if self.drawGhostPaths:
@@ -283,7 +288,16 @@ class PacManGame:
 
         if(self.renderGraphics):
             pg.display.flip() ##draws the screen
-        
+
+        if self.lastPacManPosition == self.pacMan.getCurrentTile():
+            self.gameStateService.sameTileCounter += 1
+            if self.gameStateService.sameTileCounter > 90:
+                self.gameStateService.sameTileCounter = 0
+                self.lingeredOnTileCounter += 1
+        else:
+            self.gameStateService.sameTileCounter = 0
+        self.lastPacManPosition = self.pacMan.getCurrentTile()
+
         #if pelletTimeLimit mode and pac man hasn't eaten a pellet in 10 sec, subtract from score and end the game
         if self.pelletTimeLimit and self.gameStateService.pelletCounter > 600:
             self.gameStateService.gameOver = True

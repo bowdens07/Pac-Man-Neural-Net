@@ -8,8 +8,9 @@ from graphics import convertPositionToScreenCords
 import pickle
 
 def run_neat(config, generations:int):
-    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-7')
-    population = neat.Population(config)
+    population = neat.Checkpointer.restore_checkpoint('neat-checkpoint-1153')
+    population.config.fitness_threshold = 2620
+    #population = neat.Population(config)
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
@@ -36,7 +37,7 @@ def test_genome(genome, config, game:PacManGame):
             if event.type == pg.QUIT:
                 quit()
 
-        nearestPelletPosition = convertPositionToScreenCords(game.pacMan.getNearestPellet())
+        nearestPelletDirection = game.pacMan.getRelativeDirectionToNearestPellet()
         availableTurns = game.pacMan.getRelativeAvailableDirections()
         netOutput = neuralNet.activate(
             [
@@ -47,7 +48,7 @@ def test_genome(genome, config, game:PacManGame):
                 game.sue.getCenterX(),game.sue.getCenterY(),
                 game.inky.getCenterX(),game.inky.getCenterY(), 
                 game.gameStateService.powerPellet, 
-                nearestPelletPosition[0], nearestPelletPosition[1],
+                nearestPelletDirection.value,
                 availableTurns[0],availableTurns[1],availableTurns[2],availableTurns[3]
             ]
         )
@@ -57,11 +58,12 @@ def test_genome(genome, config, game:PacManGame):
 
 
 def calculate_exploration_fitness(genome, game: PacManGame):
-    genome.fitness += game.gameStateService.score
+    #subtract 100 points for every time it lingers on a tile for more than 1.5 seconds
+    genome.fitness += (game.gameStateService.score - (game.lingeredOnTileCounter * 100))
 
 
 def watch_best(config):
-    with open("best.pickle", "rb") as f:
+    with open("bestGhostPacManNeat.pickle", "rb") as f:
         winner = pickle.load(f)
 
     game = PacManGame(lockFrameRate=True,drawGhostPaths=False,pacManLives=0,startUpTime=0,allowReplays=False, pelletTimeLimit=True, renderGraphics=True)
@@ -76,8 +78,8 @@ if __name__ == "__main__":
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_path)
-    run_neat(config,100)
-    #watch_best(config)
+    #run_neat(config,1000)
+    watch_best(config)
 
     
 

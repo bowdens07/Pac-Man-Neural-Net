@@ -49,6 +49,11 @@ def drawPath(path:list[PathingNode], color:tuple[int,int,int], screen, target:tu
         if target != None:
             drawLine(path[len(path) - 1].position, target, screen, color)
 
+def drawTilePath(path:list[tuple[int,int]], color:tuple[int,int,int], screen):
+    if path is not None and len(path) > 0:
+            for i in range(len(path) -1):
+                drawLine(path[i], path[i + 1], screen,color)    
+
 def drawTargetNode(target:tuple[int,int], color:tuple[int,int,int], screen, targetSize):
     if target != None:
         tile_height = getTileHeight(screen)

@@ -54,14 +54,15 @@ class Ghost:
         ABC.board = board
 
 
-    def draw(ABC):
-        if (not ABC.gameStateService.powerPellet and not ABC.isDead) or (ABC.isEaten and ABC.gameStateService.powerPellet and not ABC.isDead): #really gross
-            ABC.screen.blit(ABC.image, (ABC.xPos, ABC.yPos))
-        elif ABC.gameStateService.powerPellet and not ABC.isDead and not ABC.isEaten:
-            ABC.screen.blit(ABC.vulnerableGhostImage, (ABC.xPos, ABC.yPos))
-        else:
-            ABC.screen.blit(ABC.deadGhostImage, (ABC.xPos, ABC.yPos))
+    def draw(ABC, drawGraphics:bool):
         ABC.hitBox = pg.rect.Rect((ABC.getCenterX() - 18, ABC.getCenterY() - 18), (36,36)) ## fudge this for more fair hitboxes 
+        if drawGraphics:
+            if (not ABC.gameStateService.powerPellet and not ABC.isDead) or (ABC.isEaten and ABC.gameStateService.powerPellet and not ABC.isDead): #really gross
+                ABC.screen.blit(ABC.image, (ABC.xPos, ABC.yPos))
+            elif ABC.gameStateService.powerPellet and not ABC.isDead and not ABC.isEaten:
+                ABC.screen.blit(ABC.vulnerableGhostImage, (ABC.xPos, ABC.yPos))
+            else:
+                ABC.screen.blit(ABC.deadGhostImage, (ABC.xPos, ABC.yPos))
 
     def updateSpeed(ABC):
         if ABC.isDead:
@@ -99,7 +100,7 @@ class Ghost:
     #This method relies on PacMan being inside the PathingNodes Neighbors, if not, we'll search the whole space and probably crash
     #Will only assign a target if Ghost is on a PathingNode and it doesn't have a path or it's on a new pathing node
     #Make sure to pass a deep copy of pathingNodes, this algorithm will edit the neighbors of the nodes
-    def getAStarTarget(ABC, pacManPosition:tuple[int,int], pathingNodes:PathingNodes) -> tuple[bool, list[PathingNode]]:
+    def getAStarTarget(ABC, targetPosition:tuple[int,int], pathingNodes:PathingNodes) -> tuple[bool, list[PathingNode]]:
         hasGeneratedNewPath = False
         if ABC.isOnPathingNode(pathingNodes) and ABC.isOnCenterOfTile() and (len(ABC.CurrentPath) == 0 or ABC.CurrentPath[0].position != ABC.getCurrentTile()):
             ABC.snapToCenterOfTile(ABC.getCurrentTile())
@@ -127,7 +128,7 @@ class Ghost:
                     newCost = cost_to_reach[currentNode] + neighbor[0].getDistanceFromPosition(currentNode.position)
                     if neighbor[0] not in cost_to_reach.keys() or newCost < cost_to_reach[neighbor[0]]:
                         cost_to_reach[neighbor[0]] = newCost
-                        priority = newCost + Ghost._distanceToTargetHeuristic(neighbor[0].position, pacManPosition)
+                        priority = newCost + Ghost._distanceToTargetHeuristic(neighbor[0].position, targetPosition)
                         frontier.put(neighbor[0],priority)
                         came_from[neighbor[0]] = currentNode
 
@@ -142,7 +143,7 @@ class Ghost:
             ABC.CurrentPath = path
             hasGeneratedNewPath = True
             ABC.hasGeneratedNewPath = hasGeneratedNewPath
-            ABC.CurrentTarget = pacManPosition
+            ABC.CurrentTarget = targetPosition
             return (hasGeneratedNewPath,path)
         else:
             ABC.hasGeneratedNewPath = hasGeneratedNewPath
@@ -198,8 +199,8 @@ class Ghost:
             #The enum Directions corresponds to the list of bools
             if validDirections[ABC.dirRequest.value]:
                 ABC.direction= ABC.dirRequest
-        else:
-            print("Warning: Ghost doesn't have a path")
+        #else:
+            #print("Warning: Ghost doesn't have a path")
 
         ABC.__moveGhostforward(validDirections)
         #Wrap the ghosts through the tunnel
@@ -242,7 +243,7 @@ class Ghost:
             elif self.gameStateService.isInReviveZone(self.getCenterX(), self.getCenterY()): #if not dead and in the box start trying to leave box
                     self.isLeavingBox = True
                     ghostTarget = (12,14)
-                    print("InBox, trying to leave")
+                    #print("InBox, trying to leave")
             elif self.gameStateService.powerPellet: 
                 if not self.isEaten: #If not eaten run
                     isFleeing = True
