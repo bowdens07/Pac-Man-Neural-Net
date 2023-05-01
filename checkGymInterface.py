@@ -8,7 +8,7 @@ check_env(env)
 
 
 
-episodes = 5
+episodes = 1
 for episode in range(episodes):
     obs = env.reset()
     done = False

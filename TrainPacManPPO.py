@@ -68,10 +68,10 @@ if __name__ == '__main__':
     num_cpu = 4
     env = VecMonitor(SubprocVecEnv([create_environment() for i in range(num_cpu)]),"PPOLogs/TestMonitor")
 
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./board/")
+    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./board/", learning_rate=0.00003)
 
     print("--------- Starting Learning ---------")
     callback = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=log_dir)
-    model.learn(total_timesteps=5000000, callback=callback, tb_log_name="First_Pass_PacMan_PPO")
+    model.learn(total_timesteps=9000000, callback=callback, tb_log_name="First_Pass_PacMan_PPO")
     model.save("PacManModelFinished")
     print("--------- Done Learning ---------")

@@ -8,7 +8,7 @@ import os
 
 def main():
     game = PacManGame(lockFrameRate=True,drawGhostPaths=False,pacManLives=0,startUpTime=0,allowReplays=False, pelletTimeLimit=True, renderGraphics=True)
-    model = PPO.load(os.path.join("PPOLogs","best_model.zip"), env=game)
+    model = PPO.load(os.path.join("PPOModels","best_model.zip"), env=game)
 
     observation = game.reset()
     runGame = True

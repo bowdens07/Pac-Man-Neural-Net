@@ -51,6 +51,7 @@ class PacManGame(gym.Env):
         self.renderGraphics = renderGraphics
         self.lingeredOnTileCounter = 0
         self.previousScore = self.gameStateService.score
+        self.previousDirection = Directions.LEFT
 
         #Note - Ghosts must start precisely in the center of a tile, on a Pathing node, otherwise, they will break
         self.blinky = Blinky(self.gameStateService, self.screen, self.board, 53,48)
@@ -69,13 +70,13 @@ class PacManGame(gym.Env):
 
     def calculateReward(self):
         reward = self.gameStateService.score - self.previousScore
-        if self.gameStateService.gameOver:
-            reward = reward - 500
         if self.gameStateService.gameWon:
             reward = reward + 2000
         if self.lingeredOnTileCounter > 0:
             reward = reward - 100
             self.lingeredOnTileCounter = 0
+        if self.pacMan.direction == Directions.reverseDirection(self.previousDirection): #Discourage Pac-Man from turning around
+            reward = reward - 1
         return reward
 
     #openAI interface methods
@@ -85,6 +86,7 @@ class PacManGame(gym.Env):
         observation = np.asarray(self.__returnObservation(),np.int16)
         reward = self.calculateReward()
         self.previousScore = self.gameStateService.score
+        self.previousDirection= self.pacMan.direction
         info = {}
         return observation, reward, not runGame, info
 
